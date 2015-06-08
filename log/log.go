@@ -3,12 +3,12 @@ package log
 import (
 	"fmt"
 	golog "log"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/rifflock/lfshook"
 )
 
 type Fields map[string]interface{}
@@ -17,6 +17,28 @@ var (
 	logger      *logrus.Logger
 	projectName string
 )
+
+func init() {
+	projectName = os.Getenv("PROJECT_NAME")
+	if len(projectName) == 0 {
+		golog.Fatalf("'projectName' is required when configuring the replkit logger")
+	}
+
+	logger = logrus.New()
+
+	logSeverityValue := logrus.DebugLevel
+	switch os.Getenv("LOG_LEVEL") {
+	case "info":
+		logSeverityValue = logrus.InfoLevel
+	case "warning":
+		logSeverityValue = logrus.WarnLevel
+	case "error":
+		logSeverityValue = logrus.ErrorLevel
+	}
+	logger.Level = logSeverityValue
+
+	logger.Formatter = &ConsoleFormatter{}
+}
 
 func shortPath(pathIn string) string {
 	if !strings.Contains(pathIn, projectName) {
@@ -49,44 +71,6 @@ func generateCommonFields(combine Fields) logrus.Fields {
 		result[k] = v
 	}
 	return result
-}
-
-// // // // // // // // // // // // // // //
-// PUBLIC INTERFACE  // // // // // // // //
-// // // // // // // // // // // // // // //
-
-type LogOptions struct {
-	Level    string
-	FilePath string
-}
-
-func Configure(n string, o LogOptions) {
-	if len(n) == 0 {
-		golog.Fatalf("'projectName' is required when configuring the replkit logger")
-	}
-	projectName = n
-
-	logger = logrus.New()
-
-	logSeverityValue := logrus.DebugLevel
-	switch o.Level {
-	case "info":
-		logSeverityValue = logrus.InfoLevel
-	case "warning":
-		logSeverityValue = logrus.WarnLevel
-	case "error":
-		logSeverityValue = logrus.ErrorLevel
-	}
-	logger.Level = logSeverityValue
-
-	// Log to file if requested.
-	if len(o.FilePath) > 0 {
-		logger.Hooks.Add(lfshook.NewHook(lfshook.PathMap{
-			logrus.DebugLevel: o.FilePath,
-		}))
-	}
-
-	logger.Formatter = &ConsoleFormatter{}
 }
 
 func Debug(err error) {
