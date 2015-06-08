@@ -1,2 +1,2 @@
-# premkit
-This is our private toolkit shared between on-prem components.
+# saaskit
+This is our private toolkit shared between SaaS components.
