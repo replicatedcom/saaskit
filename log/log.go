@@ -21,7 +21,7 @@ var (
 func init() {
 	projectName = os.Getenv("PROJECT_NAME")
 	if len(projectName) == 0 {
-		golog.Fatalf("'projectName' is required when configuring the replkit logger")
+		golog.Fatalf("'projectName' is required when configuring the saaskit logger")
 	}
 
 	logger = logrus.New()
@@ -65,7 +65,7 @@ func shortPath(pathIn string) string {
 func generateCommonFields(combine Fields) logrus.Fields {
 	_, file, line, _ := runtime.Caller(2)
 	result := logrus.Fields{
-		"replkit.file_loc": fmt.Sprintf("%s:%d", shortPath(file), line),
+		"saaskit.file_loc": fmt.Sprintf("%s:%d", shortPath(file), line),
 	}
 	for k, v := range combine {
 		result[k] = v
