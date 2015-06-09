@@ -16,10 +16,10 @@ func (cf *ConsoleFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	formattedTime := entry.Time.Format("2006/01/02 15:04:05")
 	formattedLevel := strings.ToUpper(entry.Level.String())
 
-	fmt.Fprintf(result, "%s %s %s %s", formattedLevel, formattedTime, entry.Data["replkit.file_loc"], entry.Message)
+	fmt.Fprintf(result, "%s %s %s %s", formattedLevel, formattedTime, entry.Data["saaskit.file_loc"], entry.Message)
 
 	for k, v := range entry.Data {
-		if strings.HasPrefix(k, "replkit.") {
+		if strings.HasPrefix(k, "saaskit.") {
 			continue
 		}
 
