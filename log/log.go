@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus/hooks/bugsnag"
+	"github.com/bugsnag/bugsnag-go"
 )
 
 type Fields map[string]interface{}
@@ -21,10 +23,25 @@ var (
 func init() {
 	projectName = os.Getenv("PROJECT_NAME")
 	if len(projectName) == 0 {
-		golog.Fatalf("'projectName' is required when configuring the saaskit logger")
+		golog.Fatalf("Environment Variable 'PROJECT_NAME' must be set before configuring saaskit logger")
 	}
 
 	logger = logrus.New()
+
+	if os.Getenv("BUGSNAG_KEY") != "" {
+		bugsnag.Configure(bugsnag.Configuration{
+			ReleaseStage:        os.Getenv("BUGSNAG_ENV"),
+			APIKey:              os.Getenv("BUGSNAG_KEY"),
+			NotifyReleaseStages: []string{"production", "staging"},
+		})
+
+		hook, err := logrus_bugsnag.NewBugsnagHook()
+		if err != nil {
+			golog.Fatal(err)
+		}
+
+		logger.Hooks.Add(hook)
+	}
 
 	logSeverityValue := logrus.DebugLevel
 	switch os.Getenv("LOG_LEVEL") {
