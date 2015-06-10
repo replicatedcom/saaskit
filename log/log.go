@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/Sirupsen/logrus/hooks/bugsnag"
 	"github.com/bugsnag/bugsnag-go"
 	"github.com/bugsnag/bugsnag-go/errors"
 )
@@ -34,9 +33,10 @@ func init() {
 			ReleaseStage:        os.Getenv("BUGSNAG_ENV"),
 			APIKey:              os.Getenv("BUGSNAG_KEY"),
 			NotifyReleaseStages: []string{"production", "staging"},
+			ProjectPackages:     []string{fmt.Sprintf("%s*", projectName)},
 		})
 
-		hook, err := logrus_bugsnag.NewBugsnagHook()
+		hook, err := NewBugsnagHook()
 		if err != nil {
 			golog.Fatal(err)
 		}
@@ -114,10 +114,14 @@ func Infof(format string, args ...interface{}) {
 // }
 
 func Warning(err error) {
-	logger.WithFields(generateCommonFields(nil)).Warningf(err.Error())
+	err = errors.New(err, 1)
+	f := Fields{"saaskit.error": err}
+	logger.WithFields(generateCommonFields(f)).Warningf(err.Error())
 }
 func Warningf(format string, args ...interface{}) {
-	logger.WithFields(generateCommonFields(nil)).Warningf(format, args...)
+	err := errors.New(fmt.Errorf(format, args...), 1)
+	f := Fields{"saaskit.error": err}
+	logger.WithFields(generateCommonFields(f)).Warningf(err.Error())
 }
 
 // func WarningFields(message string, fields Fields) {
@@ -126,13 +130,15 @@ func Warningf(format string, args ...interface{}) {
 
 func Error(err error) {
 	err = errors.New(err, 1)
-	logger.WithFields(generateCommonFields(Fields{"error": err})).Errorf(err.Error())
+	f := Fields{"saaskit.error": err}
+	logger.WithFields(generateCommonFields(f)).Errorf(err.Error())
 }
 func Errorf(format string, args ...interface{}) {
-	logger.WithFields(generateCommonFields(nil)).Errorf(format, args...)
+	err := errors.New(fmt.Errorf(format, args...), 1)
+	f := Fields{"saaskit.error": err}
+	logger.WithFields(generateCommonFields(f)).Errorf(err.Error())
 }
 
 // func ErrorFields(message string, fields Fields) {
 // 	logger.WithFields(generateCommonFields(fields)).Errorf(message)
 // }
-
