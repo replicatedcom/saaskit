@@ -11,6 +11,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/Sirupsen/logrus/hooks/bugsnag"
 	"github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/errors"
 )
 
 type Fields map[string]interface{}
@@ -23,7 +24,7 @@ var (
 func init() {
 	projectName = os.Getenv("PROJECT_NAME")
 	if len(projectName) == 0 {
-		golog.Fatalf("Environment Variable 'PROJECT_NAME' must be set before configuring saaskit logger")
+		golog.Fatalf("'projectName' is required when configuring the saaskit logger")
 	}
 
 	logger = logrus.New()
@@ -124,7 +125,8 @@ func Warningf(format string, args ...interface{}) {
 // }
 
 func Error(err error) {
-	logger.WithFields(generateCommonFields(nil)).Errorf(err.Error())
+	err = errors.New(err, 1)
+	logger.WithFields(generateCommonFields(Fields{"error": err})).Errorf(err.Error())
 }
 func Errorf(format string, args ...interface{}) {
 	logger.WithFields(generateCommonFields(nil)).Errorf(format, args...)
@@ -133,3 +135,4 @@ func Errorf(format string, args ...interface{}) {
 // func ErrorFields(message string, fields Fields) {
 // 	logger.WithFields(generateCommonFields(fields)).Errorf(message)
 // }
+
