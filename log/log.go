@@ -23,7 +23,7 @@ var (
 func init() {
 	projectName = os.Getenv("PROJECT_NAME")
 	if len(projectName) == 0 {
-		golog.Fatalf("'projectName' is required when configuring the saaskit logger")
+		golog.Fatalf("PROJECT_NAME envvar must be set prior to configuring the saaskit logger")
 	}
 
 	logger = logrus.New()
