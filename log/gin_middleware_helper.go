@@ -29,11 +29,11 @@ func SaaskitLogger() gin.HandlerFunc {
 		case statusCode >= 200 && statusCode <= 299:
 			fallthrough
 		case statusCode >= 300 && statusCode <= 399:
-			Infof(logMessage)
+			InfofNoPath(logMessage)
 		case statusCode >= 400 && statusCode <= 499:
 			fallthrough
 		default:
-			Errorf(logMessage)
+			ErrorfNoPath(logMessage)
 		}
 	}
 }
