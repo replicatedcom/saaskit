@@ -16,7 +16,7 @@ func (sr *StatusRange) Includes(n int) bool {
 	return n >= sr.Min && n <= sr.Max
 }
 
-func PremkitLogMiddleware(statusBlacklistRanges []StatusRange) gin.HandlerFunc {
+func SaaskitLogger(statusBlacklistRanges []StatusRange) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bl := statusBlacklistRanges
 
