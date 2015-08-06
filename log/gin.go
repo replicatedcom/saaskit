@@ -50,7 +50,7 @@ func SaaskitLogger(statusBlacklistRanges []StatusRange) gin.HandlerFunc {
 		case statusCode >= 400 && statusCode <= 499:
 			fallthrough
 		default:
-			ErrorfNoPath(logMessage)
+			Errorf(logMessage)
 		}
 	}
 }
