@@ -59,6 +59,11 @@ func shortPath(pathIn string) string {
 		return pathIn
 	}
 
+	// Truncate absurdly long paths even if they don't match our project name (e.g. godeps).
+	if len(resultToks) > 4 {
+		resultToks = resultToks[len(resultToks)-3:]
+	}
+
 	return strings.Join(resultToks, string(filepath.Separator))
 }
 
