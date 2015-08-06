@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/errors"
 )
 
 type Fields map[string]interface{}
@@ -21,10 +23,26 @@ var (
 func init() {
 	projectName = os.Getenv("PROJECT_NAME")
 	if len(projectName) == 0 {
-		golog.Fatalf("'projectName' is required when configuring the saaskit logger")
+		golog.Fatalf("PROJECT_NAME envvar must be set prior to configuring the saaskit logger")
 	}
 
 	logger = logrus.New()
+
+	if os.Getenv("BUGSNAG_KEY") != "" {
+		bugsnag.Configure(bugsnag.Configuration{
+			ReleaseStage:        os.Getenv("BUGSNAG_ENV"),
+			APIKey:              os.Getenv("BUGSNAG_KEY"),
+			NotifyReleaseStages: []string{"production", "staging"},
+			ProjectPackages:     []string{fmt.Sprintf("%s*", projectName)},
+		})
+
+		hook, err := NewBugsnagHook()
+		if err != nil {
+			golog.Fatal(err)
+		}
+
+		logger.Hooks.Add(hook)
+	}
 
 	logSeverityValue := logrus.DebugLevel
 	switch os.Getenv("LOG_LEVEL") {
@@ -84,11 +102,6 @@ func Debug(err error) {
 func Debugf(format string, args ...interface{}) {
 	logger.WithFields(generateCommonFields(nil)).Debugf(format, args...)
 }
-func DebugfNoPath(format string, args ...interface{}) {
-	fields := generateCommonFields(nil)
-	delete(fields, "saaskit.field_loc")
-	logger.WithFields(fields).Debugf(format, args...)
-}
 
 // func DebugFields(message string, fields Fields) {
 // 	logger.WithFields(generateCommonFields(fields)).Debugf(message)
@@ -100,26 +113,20 @@ func Info(err error) {
 func Infof(format string, args ...interface{}) {
 	logger.WithFields(generateCommonFields(nil)).Infof(format, args...)
 }
-func InfofNoPath(format string, args ...interface{}) {
-	fields := generateCommonFields(nil)
-	fields["saaskit.file_loc"] = ""
-	logger.WithFields(fields).Infof(format, args...)
-}
 
 // func InfoFields(message string, fields Fields) {
 // 	logger.WithFields(generateCommonFields(fields)).Infof(message)
 // }
 
 func Warning(err error) {
-	logger.WithFields(generateCommonFields(nil)).Warningf(err.Error())
+	err = errors.New(err, 1)
+	f := Fields{"saaskit.error": err}
+	logger.WithFields(generateCommonFields(f)).Warningf(err.Error())
 }
 func Warningf(format string, args ...interface{}) {
-	logger.WithFields(generateCommonFields(nil)).Warningf(format, args...)
-}
-func WarningfNoPath(format string, args ...interface{}) {
-	fields := generateCommonFields(nil)
-	fields["saaskit.file_loc"] = ""
-	logger.WithFields(fields).Warningf(format, args...)
+	err := errors.New(fmt.Errorf(format, args...), 1)
+	f := Fields{"saaskit.error": err}
+	logger.WithFields(generateCommonFields(f)).Warningf(err.Error())
 }
 
 // func WarningFields(message string, fields Fields) {
@@ -127,15 +134,14 @@ func WarningfNoPath(format string, args ...interface{}) {
 // }
 
 func Error(err error) {
-	logger.WithFields(generateCommonFields(nil)).Errorf(err.Error())
+	err = errors.New(err, 1)
+	f := Fields{"saaskit.error": err}
+	logger.WithFields(generateCommonFields(f)).Errorf(err.Error())
 }
 func Errorf(format string, args ...interface{}) {
-	logger.WithFields(generateCommonFields(nil)).Errorf(format, args...)
-}
-func ErrorfNoPath(format string, args ...interface{}) {
-	fields := generateCommonFields(nil)
-	fields["saaskit.file_loc"] = ""
-	logger.WithFields(fields).Errorf(format, args...)
+	err := errors.New(fmt.Errorf(format, args...), 1)
+	f := Fields{"saaskit.error": err}
+	logger.WithFields(generateCommonFields(f)).Errorf(err.Error())
 }
 
 // func ErrorFields(message string, fields Fields) {
