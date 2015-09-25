@@ -1,20 +1,15 @@
 package mail
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"net/http"
 	"os"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/awslabs/aws-sdk-go/service/sqs"
 )
 
 func SendMail(recipient string, template string, context map[string]interface{}) error {
-	if len(os.Getenv("MAIL_API")) == 0 {
-		return errors.New("MAIL_API envvar must be set prior to using the mail api")
-	}
-	url := fmt.Sprintf("%s/v1/send", os.Getenv("MAIL_API"))
-
 	type Request struct {
 		Recipient string                 `json:"recipient"`
 		Template  string                 `json:"template"`
@@ -26,23 +21,55 @@ func SendMail(recipient string, template string, context map[string]interface{})
 		Context:   context,
 	}
 
-	b, err := json.Marshal(request)
+	return deliverSqsMessage("send", request)
+}
+func deliverSqsMessage(action string, payload interface{}) error {
+	b, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(b))
-	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	if len(os.Getenv("AWS_ACCESS_KEY_ID")) == 0 {
+		err := errors.New("AWS_ACCESS_KEY_ID must be set before starting")
+		return err
+	}
+	if len(os.Getenv("AWS_SECRET_ACCESS_KEY")) == 0 {
+		err := errors.New("AWS_SECRET_ACCESS_KEY must be set before starting")
+		return err
+	}
+
+	client := sqs.New(&aws.Config{Region: aws.String("us-east-1")})
+
+	queueName := os.Getenv("AWS_SQS_MAIL_QUEUENAME")
+	if len(queueName) == 0 {
+		err := errors.New("AWS_SQS_MAIL_QUEUENAME must be set before starting")
+		return err
+	}
+
+	getQueueUrlRequest := &sqs.GetQueueURLInput{
+		QueueName:              aws.String(queueName),
+		QueueOwnerAWSAccountID: aws.String("323305220431"),
+	}
+	getQueueUrlOutput, err := client.GetQueueURL(getQueueUrlRequest)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode == 204 {
-		return nil
+	sendMessageInput := &sqs.SendMessageInput{
+		MessageBody: aws.String(string(b[:])),
+		QueueURL:    getQueueUrlOutput.QueueURL,
+		MessageAttributes: map[string]*sqs.MessageAttributeValue{
+			"Key": {
+				DataType:    aws.String("String"),
+				StringValue: aws.String(action),
+			},
+		},
 	}
 
-	return fmt.Errorf("Unexpected response from mail-api: %d", resp.StatusCode)
+	_, err = client.SendMessage(sendMessageInput)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
