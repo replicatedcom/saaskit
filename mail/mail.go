@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
+	_ "github.com/aws/aws-sdk-go/internal/endpoints"
 	"github.com/awslabs/aws-sdk-go/service/sqs"
 )
 
