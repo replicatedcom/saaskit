@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	_ "github.com/aws/aws-sdk-go/internal/endpoints"
-	"github.com/awslabs/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
 func SendMail(recipient string, template string, context map[string]interface{}) error {
@@ -47,18 +47,18 @@ func deliverSqsMessage(action string, payload interface{}) error {
 		return err
 	}
 
-	getQueueUrlRequest := &sqs.GetQueueURLInput{
+	getQueueUrlRequest := &sqs.GetQueueUrlInput{
 		QueueName:              aws.String(queueName),
-		QueueOwnerAWSAccountID: aws.String("323305220431"),
+		QueueOwnerAWSAccountId: aws.String("323305220431"),
 	}
-	getQueueUrlOutput, err := client.GetQueueURL(getQueueUrlRequest)
+	getQueueUrlOutput, err := client.GetQueueUrl(getQueueUrlRequest)
 	if err != nil {
 		return err
 	}
 
 	sendMessageInput := &sqs.SendMessageInput{
 		MessageBody: aws.String(string(b[:])),
-		QueueURL:    getQueueUrlOutput.QueueURL,
+		QueueUrl:    getQueueUrlOutput.QueueUrl,
 		MessageAttributes: map[string]*sqs.MessageAttributeValue{
 			"Key": {
 				DataType:    aws.String("String"),
