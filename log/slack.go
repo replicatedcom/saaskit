@@ -11,15 +11,6 @@ import (
 var (
 	client      *slack.Client
 	slackLogger *logrus.Logger
-
-	AllLevels = []logrus.Level{
-		logrus.DebugLevel,
-		logrus.InfoLevel,
-		logrus.WarnLevel,
-		logrus.ErrorLevel,
-		logrus.FatalLevel,
-		logrus.PanicLevel,
-	}
 )
 
 func init() {
@@ -39,10 +30,9 @@ func init() {
 		}
 
 		slackLogger.Hooks.Add(&SlackHook{
-			HookURL:        slacklogHookURL,
-			AcceptedLevels: []logrus.Level{logrus.ErrorLevel},
-			Channel:        slacklogChannel,
-			Username:       slacklogUsername,
+			HookURL:  slacklogHookURL,
+			Channel:  slacklogChannel,
+			Username: slacklogUsername,
 		})
 	}
 }
@@ -57,29 +47,19 @@ func Slackf(format string, args ...interface{}) {
 	go GetSlackLogger().Errorf(format, args...)
 }
 
-// SlackHook is a logrus Hook for dispatching messages to the specified
-// channel on Slack.
 type SlackHook struct {
-	// Messages with a log level not contained in this array
-	// will not be dispatched. If nil, all messages will be dispatched.
-	AcceptedLevels []logrus.Level
-	HookURL        string
-	IconURL        string
-	Channel        string
-	IconEmoji      string
-	Username       string
-	c              *slack.Client
+	HookURL   string
+	IconURL   string
+	Channel   string
+	IconEmoji string
+	Username  string
+	c         *slack.Client
 }
 
-// Levels sets which levels to sent to slack
 func (sh *SlackHook) Levels() []logrus.Level {
-	if sh.AcceptedLevels == nil {
-		return AllLevels
-	}
-	return sh.AcceptedLevels
+	return allLevels
 }
 
-// Fire -  Sent event to slack
 func (sh *SlackHook) Fire(e *logrus.Entry) error {
 	if sh.c == nil {
 		if err := sh.initClient(); err != nil {
@@ -109,9 +89,7 @@ func (sh *SlackHook) Fire(e *logrus.Entry) error {
 
 	attach := msg.NewAttachment()
 
-	// If there are fields we need to render them at attachments
 	if len(e.Data) > 0 {
-
 		// Add a header above field data
 		// attach.Text = "Message fields"
 
