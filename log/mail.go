@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/replicatedcom/saaskit/mail"
 
@@ -13,7 +12,7 @@ import (
 )
 
 const (
-	mailLoggerTimeFormat = "20060102 15:04:05"
+	mailLoggerTimeFormat = "Jan 02 2006 15:04:05"
 )
 
 var (
@@ -55,9 +54,9 @@ func (hook *MailAPIHook) Fire(entry *logrus.Entry) error {
 
 	context := map[string]interface{}{
 		"project_name": hook.ProjectName,
-		"time":         formatTime(entry.Time),
+		"time":         entry.Time.Format(mailLoggerTimeFormat),
 		"message":      entry.Message,
-		"fields":       createFields(entry.Data),
+		"fields":       entry.Data,
 	}
 
 	if err := mail.SendMailInternal(hook.Recipients, "internal-log-message", subject, context); err != nil {
@@ -69,16 +68,4 @@ func (hook *MailAPIHook) Fire(entry *logrus.Entry) error {
 
 func (sh *MailAPIHook) Levels() []logrus.Level {
 	return allLevels
-}
-
-func formatTime(t time.Time) string {
-	return t.Format(mailLoggerTimeFormat)
-}
-
-func createFields(data logrus.Fields) string {
-	fields := make([]string, 0, len(data))
-	for key, value := range data {
-		fields = append(fields, fmt.Sprintf("%s:\t%v", key, value))
-	}
-	return strings.Join(fields, "\n")
 }
