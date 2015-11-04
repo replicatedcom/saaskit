@@ -18,6 +18,15 @@ type Fields map[string]interface{}
 var (
 	logger      *logrus.Logger
 	projectName string
+
+	allLevels = []logrus.Level{
+		logrus.DebugLevel,
+		logrus.InfoLevel,
+		logrus.WarnLevel,
+		logrus.ErrorLevel,
+		logrus.FatalLevel,
+		logrus.PanicLevel,
+	}
 )
 
 func init() {

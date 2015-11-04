@@ -10,20 +10,31 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
-func SendMail(recipient string, template string, context map[string]interface{}) error {
+func SendMail(recipients []string, template string, subject string, context map[string]interface{}) error {
+	return sendMail("send", recipients, template, subject, context)
+}
+
+func SendMailInternal(recipients []string, template string, subject string, context map[string]interface{}) error {
+	return sendMail("send_internal", recipients, template, subject, context)
+}
+
+func sendMail(action string, recipients []string, template string, subject string, context map[string]interface{}) error {
 	type Request struct {
-		Recipient string                 `json:"recipient"`
-		Template  string                 `json:"template"`
-		Context   map[string]interface{} `json:"context"`
+		Recipients []string               `json:"recipients"`
+		Template   string                 `json:"template"`
+		Subject    string                 `json:"subject"`
+		Context    map[string]interface{} `json:"context"`
 	}
 	request := Request{
-		Recipient: recipient,
-		Template:  template,
-		Context:   context,
+		Recipients: recipients,
+		Template:   template,
+		Subject:    subject,
+		Context:    context,
 	}
 
-	return deliverSqsMessage("send", request)
+	return deliverSqsMessage(action, request)
 }
+
 func deliverSqsMessage(action string, payload interface{}) error {
 	b, err := json.Marshal(payload)
 	if err != nil {
