@@ -13,20 +13,10 @@ import (
 	"github.com/bugsnag/bugsnag-go/errors"
 )
 
-type Fields map[string]interface{}
-
 var (
-	logger      *logrus.Logger
-	projectName string
+	Log Logger
 
-	allLevels = []logrus.Level{
-		logrus.DebugLevel,
-		logrus.InfoLevel,
-		logrus.WarnLevel,
-		logrus.ErrorLevel,
-		logrus.FatalLevel,
-		logrus.PanicLevel,
-	}
+	projectName string
 )
 
 func init() {
@@ -35,7 +25,14 @@ func init() {
 		golog.Fatalf("PROJECT_NAME envvar must be set prior to configuring the saaskit logger")
 	}
 
-	logger = logrus.New()
+	Log = NewLogger()
+	Log.OnBeforeLog(func(entry *logrus.Entry) *logrus.Entry {
+		_, file, line, _ := runtime.Caller(2)
+		fields := logrus.Fields{
+			"saaskit.file_loc": fmt.Sprintf("%s:%d", shortPath(file), line),
+		}
+		return entry.WithFields(fields)
+	})
 
 	if os.Getenv("BUGSNAG_KEY") != "" {
 		bugsnag.Configure(bugsnag.Configuration{
@@ -50,7 +47,7 @@ func init() {
 			golog.Fatal(err)
 		}
 
-		logger.Hooks.Add(hook)
+		Log.Hooks.Add(hook)
 	}
 
 	logSeverityValue := logrus.DebugLevel
@@ -62,10 +59,66 @@ func init() {
 	case "error":
 		logSeverityValue = logrus.ErrorLevel
 	}
-	logger.Level = logSeverityValue
+	Log.Level = logSeverityValue
 
-	logger.Formatter = &ConsoleFormatter{}
+	Log.Formatter = &ConsoleFormatter{}
 }
+
+func Debug(err error) {
+	Log.Debugf(err.Error())
+}
+func Debugf(format string, args ...interface{}) {
+	Log.Debugf(format, args...)
+}
+
+//func DebugFields(format string, fields logrus.Fields) {
+// 	Log.WithFields(fields).Debugf(format)
+//}
+
+func Info(err error) {
+	Log.Infof(err.Error())
+}
+func Infof(format string, args ...interface{}) {
+	Log.Infof(format, args...)
+}
+
+//func InfoFields(format string, fields logrus.Fields) {
+// 	Log.WithFields(fields).Infof(format)
+//}
+
+func Warning(err error) {
+	err = errors.New(err, 1)
+	errFields := logrus.Fields{"saaskit.error": err}
+	Log.WithFields(errFields).Warningf(err.Error())
+}
+func Warningf(format string, args ...interface{}) {
+	err := errors.New(fmt.Errorf(format, args...), 1)
+	errFields := logrus.Fields{"saaskit.error": err}
+	Log.WithFields(errFields).Warningf(err.Error())
+}
+
+//func WarningFields(format string, fields logrus.Fields) {
+//	err := errors.New(fmt.Errorf(format, args...), 1)
+//	errFields := logrus.Fields{"saaskit.error": err}
+// 	Log.WithFields(errFields).WithFields(fields).Warningf(message)
+//}
+
+func Error(err error) {
+	err = errors.New(err, 1)
+	errFields := logrus.Fields{"saaskit.error": err}
+	Log.WithFields(errFields).Errorf(err.Error())
+}
+func Errorf(format string, args ...interface{}) {
+	err := errors.New(fmt.Errorf(format, args...), 1)
+	errFields := logrus.Fields{"saaskit.error": err}
+	Log.WithFields(errFields).Errorf(err.Error())
+}
+
+//func ErrorFields(format string, fields logrus.Fields) {
+//	err := errors.New(fmt.Errorf(format, args...), 1)
+//	errFields := logrus.Fields{"saaskit.error": err}
+// 	Log.WithFields(errFields).WithFields(fields).Errorf(message)
+//}
 
 func shortPath(pathIn string) string {
 	if !strings.Contains(pathIn, projectName) {
@@ -93,66 +146,3 @@ func shortPath(pathIn string) string {
 
 	return strings.Join(resultToks, string(filepath.Separator))
 }
-
-func generateCommonFields(combine Fields) logrus.Fields {
-	_, file, line, _ := runtime.Caller(2)
-	result := logrus.Fields{
-		"saaskit.file_loc": fmt.Sprintf("%s:%d", shortPath(file), line),
-	}
-	for k, v := range combine {
-		result[k] = v
-	}
-	return result
-}
-
-func Debug(err error) {
-	logger.WithFields(generateCommonFields(nil)).Debugf(err.Error())
-}
-func Debugf(format string, args ...interface{}) {
-	logger.WithFields(generateCommonFields(nil)).Debugf(format, args...)
-}
-
-// func DebugFields(message string, fields Fields) {
-// 	logger.WithFields(generateCommonFields(fields)).Debugf(message)
-// }
-
-func Info(err error) {
-	logger.WithFields(generateCommonFields(nil)).Infof(err.Error())
-}
-func Infof(format string, args ...interface{}) {
-	logger.WithFields(generateCommonFields(nil)).Infof(format, args...)
-}
-
-// func InfoFields(message string, fields Fields) {
-// 	logger.WithFields(generateCommonFields(fields)).Infof(message)
-// }
-
-func Warning(err error) {
-	err = errors.New(err, 1)
-	f := Fields{"saaskit.error": err}
-	logger.WithFields(generateCommonFields(f)).Warningf(err.Error())
-}
-func Warningf(format string, args ...interface{}) {
-	err := errors.New(fmt.Errorf(format, args...), 1)
-	f := Fields{"saaskit.error": err}
-	logger.WithFields(generateCommonFields(f)).Warningf(err.Error())
-}
-
-// func WarningFields(message string, fields Fields) {
-// 	logger.WithFields(generateCommonFields(fields)).Warningf(message)
-// }
-
-func Error(err error) {
-	err = errors.New(err, 1)
-	f := Fields{"saaskit.error": err}
-	logger.WithFields(generateCommonFields(f)).Errorf(err.Error())
-}
-func Errorf(format string, args ...interface{}) {
-	err := errors.New(fmt.Errorf(format, args...), 1)
-	f := Fields{"saaskit.error": err}
-	logger.WithFields(generateCommonFields(f)).Errorf(err.Error())
-}
-
-// func ErrorFields(message string, fields Fields) {
-// 	logger.WithFields(generateCommonFields(fields)).Errorf(message)
-// }
