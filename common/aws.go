@@ -28,8 +28,7 @@ func SQSDeliverMessage(queueName, action string, payload interface{}) error {
 	}
 
 	getQueueUrlRequest := &sqs.GetQueueUrlInput{
-		QueueName:              aws.String(queueName),
-		QueueOwnerAWSAccountId: aws.String("323305220431"),
+		QueueName: aws.String(queueName),
 	}
 	getQueueUrlOutput, err := client.GetQueueUrl(getQueueUrlRequest)
 	if err != nil {
