@@ -41,16 +41,6 @@ func SaaskitLogger(statusBlacklistRanges []StatusRange) gin.HandlerFunc {
 		}
 
 		logMessage := fmt.Sprintf("[GIN] %3d | %12v | %s | %-7s %s", statusCode, latency, clientIP, method, c.Request.URL.Path)
-
-		switch {
-		case statusCode >= 200 && statusCode <= 299:
-			fallthrough
-		case statusCode >= 300 && statusCode <= 399:
-			Debugf(logMessage)
-		case statusCode >= 400 && statusCode <= 499:
-			fallthrough
-		default:
-			Errorf(logMessage)
-		}
+		Debugf(logMessage)
 	}
 }
