@@ -27,7 +27,7 @@ func init() {
 
 	Log = NewLogger()
 	Log.OnBeforeLog(func(entry *logrus.Entry) *logrus.Entry {
-		_, file, line, _ := runtime.Caller(2)
+		_, file, line, _ := runtime.Caller(6)
 		fields := logrus.Fields{
 			"saaskit.file_loc": fmt.Sprintf("%s:%d", shortPath(file), line),
 		}
