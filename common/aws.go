@@ -20,7 +20,16 @@ func SQSDeliverMessage(queueName, action string, payload interface{}) error {
 		return err
 	}
 
-	client := sqs.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
+	config := &aws.Config{
+		Region: aws.String("us-east-1"),
+	}
+
+	endpoint := os.Getenv("SQS_ENDPOINT")
+	if endpoint != "" {
+		config = config.WithEndpoint(endpoint)
+	}
+
+	client := sqs.New(session.New(), config)
 
 	b, err := json.Marshal(payload)
 	if err != nil {
@@ -52,3 +61,4 @@ func SQSDeliverMessage(queueName, action string, payload interface{}) error {
 
 	return nil
 }
+
