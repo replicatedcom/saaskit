@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
-func SQSDeliverMessage(queueName, action string, payload interface{}) error {
+func SQSDeliverMessage(queueName, action string, payload interface{}, delay int) error {
 	if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
 		err := errors.New("AWS_ACCESS_KEY_ID must be set before starting")
 		return err
@@ -55,10 +55,14 @@ func SQSDeliverMessage(queueName, action string, payload interface{}) error {
 		},
 	}
 
+	if delay > 0 {
+		delay64 := int64(delay)
+		sendMessageInput.DelaySeconds = &delay64
+	}
+
 	if _, err := client.SendMessage(sendMessageInput); err != nil {
 		return err
 	}
 
 	return nil
 }
-
