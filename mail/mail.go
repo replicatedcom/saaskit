@@ -35,5 +35,5 @@ func sendMail(action string, recipients []string, template string, subject strin
 		return err
 	}
 
-	return common.SQSDeliverMessage(queueName, action, request)
+	return common.SQSDeliverMessage(queueName, action, request, 0)
 }

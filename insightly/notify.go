@@ -29,5 +29,5 @@ func NotifyNewOrganization(teamId string, name string) error {
 		return err
 	}
 
-	return common.SQSDeliverMessage(queueName, "create.organization", request)
+	return common.SQSDeliverMessage(queueName, "create.organization", request, 0)
 }
