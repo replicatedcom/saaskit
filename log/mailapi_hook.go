@@ -35,7 +35,7 @@ func (hook *MailAPIHook) Fire(entry *logrus.Entry) error {
 		"fields":       entry.Data,
 	}
 
-	if err := mail.SendMailInternal(recipients, "internal-log-message", subject, context); err != nil {
+	if err := mail.SendMailInternal("", "", recipients, "internal-log-message", subject, context); err != nil {
 		return err
 	}
 
