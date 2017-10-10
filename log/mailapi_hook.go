@@ -6,7 +6,7 @@ import (
 
 	"github.com/replicatedcom/saaskit/mail"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 const (

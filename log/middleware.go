@@ -3,7 +3,7 @@ package log
 import (
 	golog "log"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 type (

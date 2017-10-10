@@ -3,8 +3,8 @@ package log
 import (
 	"errors"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/bugsnag/bugsnag-go"
+	"github.com/sirupsen/logrus"
 )
 
 type bugsnagHook struct{}

@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	bugsnag "github.com/bugsnag/bugsnag-go"
 	"github.com/bugsnag/bugsnag-go/errors"
 )
