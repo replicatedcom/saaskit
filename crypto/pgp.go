@@ -3,6 +3,7 @@ package crypto
 import (
 	"bufio"
 	"bytes"
+	"regexp"
 
 	"github.com/pkg/errors"
 
@@ -16,6 +17,10 @@ type PGPKeyPair struct {
 }
 
 func GeneratePGPKeyPair(name, comment, email string) (*PGPKeyPair, error) {
+	name = makeSafe(name)
+	comment = makeSafe(comment)
+	email = makeSafe(email)
+
 	// ent type is *openpgp.Entity
 	ent, err := openpgp.NewEntity(name, comment, email, nil)
 	if err != nil {
@@ -67,4 +72,13 @@ func GeneratePGPKeyPair(name, comment, email string) (*PGPKeyPair, error) {
 	}
 
 	return keyPair, nil
+}
+
+// From the openpgp package source:
+// NewUserId returns a UserId or nil if any of the arguments contain invalid
+// characters. The invalid characters are '\x00', '(', ')', '<' and '>'
+var safeRe = regexp.MustCompile("[\x00()<>]")
+
+func makeSafe(s string) string {
+	return safeRe.ReplaceAllString(s, "-")
 }
