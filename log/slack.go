@@ -12,7 +12,6 @@ var (
 )
 
 type SlackLogOptions struct {
-	HookURL  string
 	Channel  string
 	Username string
 }
@@ -36,12 +35,12 @@ func InitSlack(opts *SlackLogOptions) {
 
 	slackLogHookURL := param.Lookup("SLACKLOG_HOOK_URL", "/slack/hook_url", true)
 	if slackLogHookURL != "" {
-		slacklogChannel := opts.SlacklogChannel
+		slacklogChannel := opts.Channel
 		if slacklogChannel == "" {
 			slacklogChannel = "#developer-events"
 		}
 
-		slacklogUsername := opts.SlacklogUsername
+		slacklogUsername := opts.Username
 		if slacklogUsername == "" {
 			slacklogUsername = "chatops"
 		}
