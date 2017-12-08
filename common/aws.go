@@ -20,26 +20,34 @@ func SQSDeliverMessage(queueName, action string, payload interface{}, delay int)
 		}
 	}
 
-	client := sqs.New(session.New(), &aws.Config{
-		Region: aws.String("us-east-1"),
-	})
+	config := aws.NewConfig()
+	region := os.Getenv("AWS_REGION")
+	if region == "" {
+		region = "us-east-1"
+	}
+	config.WithRegion(region)
+	endpoint := os.Getenv("SQS_ENDPOINT")
+	if endpoint != "" {
+		config = config.WithEndpoint(endpoint)
+	}
+	svc := sqs.New(session.New(), config)
 
 	b, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
-	getQueueUrlRequest := &sqs.GetQueueUrlInput{
+	getQueueURLRequest := &sqs.GetQueueUrlInput{
 		QueueName: aws.String(queueName),
 	}
-	getQueueUrlOutput, err := client.GetQueueUrl(getQueueUrlRequest)
+	getQueueURLOutput, err := svc.GetQueueUrl(getQueueURLRequest)
 	if err != nil {
 		return err
 	}
 
 	sendMessageInput := &sqs.SendMessageInput{
 		MessageBody: aws.String(string(b[:])),
-		QueueUrl:    getQueueUrlOutput.QueueUrl,
+		QueueUrl:    getQueueURLOutput.QueueUrl,
 		MessageAttributes: map[string]*sqs.MessageAttributeValue{
 			"Key": {
 				DataType:    aws.String("String"),
@@ -53,7 +61,7 @@ func SQSDeliverMessage(queueName, action string, payload interface{}, delay int)
 		sendMessageInput.DelaySeconds = &delay64
 	}
 
-	if _, err := client.SendMessage(sendMessageInput); err != nil {
+	if _, err := svc.SendMessage(sendMessageInput); err != nil {
 		return err
 	}
 
