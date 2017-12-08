@@ -2,9 +2,9 @@ package log
 
 import (
 	"io/ioutil"
-	"os"
 	"strings"
 
+	"github.com/replicatedcom/saaskit/param"
 	"github.com/sirupsen/logrus"
 )
 
@@ -12,24 +12,31 @@ var (
 	MailLog Logger
 )
 
-func init() {
+type MailLogOptions struct {
+	Recipients string
+}
+
+func InitMail(opts *MailLogOptions) {
 	MailLog = NewLogger()
 	MailLog.Logger.Out = ioutil.Discard
+
+	if opts == nil {
+		return
+	}
 
 	MailLog.OnBeforeLog(func(entry *logrus.Entry) *logrus.Entry {
 		return entry.WithFields(
 			logrus.Fields{
-				"project.name": os.Getenv("PROJECT_NAME"),
-				"environment":  os.Getenv("ENVIRONMENT"),
+				"project.name": param.Lookup("PROJECT_NAME", "", false),
+				"environment":  param.Lookup("ENVIRONMENT", "/replicated/environment", false),
 			},
 		)
 	})
 
-	maillogRecipients := os.Getenv("MAILLOG_RECIPIENTS")
-	if maillogRecipients != "" {
-		recipients := strings.Split(maillogRecipients, ",")
+	if opts.Recipients != "" {
+		recipients := strings.Split(opts.Recipients, ",")
 		MailLog.Hooks.Add(&MailAPIHook{
-			ProjectName: os.Getenv("PROJECT_NAME"),
+			ProjectName: param.Lookup("PROJECT_NAME", "", false),
 			Recipients:  recipients,
 		})
 	}

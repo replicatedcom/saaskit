@@ -2,9 +2,9 @@ package mail
 
 import (
 	"errors"
-	"os"
 
 	"github.com/replicatedcom/saaskit/common"
+	"github.com/replicatedcom/saaskit/param"
 )
 
 func SendMail(fromEmail, fromName string, recipients []string, template string, subject string, context map[string]interface{}) error {
@@ -33,9 +33,9 @@ func sendMail(action string, fromEmail, fromName string, recipients []string, te
 		Context:    context,
 	}
 
-	queueName := os.Getenv("AWS_SQS_MAIL_QUEUENAME")
-	if len(queueName) == 0 {
-		err := errors.New("AWS_SQS_MAIL_QUEUENAME must be set before starting")
+	queueName := param.Lookup("AWS_SQS_MAIL_QUEUENAME", "/queues/mail_api", false)
+	if queueName == "" {
+		err := errors.New("AWS_SQS_MAIL_QUEUENAME must be set")
 		return err
 	}
 
@@ -58,9 +58,9 @@ func SendRawMail(fromEmail, fromName string, recipients []string, html string, s
 		Subject:    subject,
 	}
 
-	queueName := os.Getenv("AWS_SQS_MAIL_QUEUENAME")
-	if len(queueName) == 0 {
-		err := errors.New("AWS_SQS_MAIL_QUEUENAME must be set before starting")
+	queueName := param.Lookup("AWS_SQS_MAIL_QUEUENAME", "/queues/mail_api", false)
+	if queueName == "" {
+		err := errors.New("AWS_SQS_MAIL_QUEUENAME must be set")
 		return err
 	}
 

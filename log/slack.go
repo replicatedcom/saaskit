@@ -2,8 +2,8 @@ package log
 
 import (
 	"io/ioutil"
-	"os"
 
+	"github.com/replicatedcom/saaskit/param"
 	"github.com/sirupsen/logrus"
 )
 
@@ -11,33 +11,43 @@ var (
 	SlackLog Logger
 )
 
-func init() {
+type SlackLogOptions struct {
+	HookURL  string
+	Channel  string
+	Username string
+}
+
+func InitSlack(opts *SlackLogOptions) {
 	SlackLog = NewLogger()
 	SlackLog.Logger.Out = ioutil.Discard
+
+	if opts == nil {
+		return
+	}
 
 	SlackLog.OnBeforeLog(func(entry *logrus.Entry) *logrus.Entry {
 		return entry.WithFields(
 			logrus.Fields{
-				"project.name": os.Getenv("PROJECT_NAME"),
-				"environment":  os.Getenv("ENVIRONMENT"),
+				"project.name": param.Lookup("PROJECT_NAME", "", false),
+				"environment":  param.Lookup("ENVIRONMENT", "/replicated/environment", false),
 			},
 		)
 	})
 
-	slacklogHookURL := os.Getenv("SLACKLOG_HOOK_URL")
-	if slacklogHookURL != "" {
-		slacklogChannel := os.Getenv("SLACKLOG_CHANNEL")
+	slackLogHookURL := param.Lookup("SLACKLOG_HOOK_URL", "/slack/hook_url", true)
+	if slackLogHookURL != "" {
+		slacklogChannel := opts.SlacklogChannel
 		if slacklogChannel == "" {
 			slacklogChannel = "#developer-events"
 		}
 
-		slacklogUsername := os.Getenv("SLACKLOG_USERNAME")
+		slacklogUsername := opts.SlacklogUsername
 		if slacklogUsername == "" {
 			slacklogUsername = "chatops"
 		}
 
 		SlackLog.Hooks.Add(&SlackHook{
-			HookURL:  slacklogHookURL,
+			HookURL:  slackLogHookURL,
 			Channel:  slacklogChannel,
 			Username: slacklogUsername,
 		})

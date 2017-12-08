@@ -11,25 +11,18 @@ import (
 )
 
 func SQSDeliverMessage(queueName, action string, payload interface{}, delay int) error {
-	if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
-		err := errors.New("AWS_ACCESS_KEY_ID must be set before starting")
-		return err
-	}
-	if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
-		err := errors.New("AWS_SECRET_ACCESS_KEY must be set before starting")
-		return err
+	if os.Getenv("USE_EC2_PARAMETERS") == "" {
+		if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+			return errors.New("AWS_ACCESS_KEY_ID must be set")
+		}
+		if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+			return errors.New("AWS_SECRET_ACCESS_KEY must be set")
+		}
 	}
 
-	config := &aws.Config{
+	client := sqs.New(session.New(), &aws.Config{
 		Region: aws.String("us-east-1"),
-	}
-
-	endpoint := os.Getenv("SQS_ENDPOINT")
-	if endpoint != "" {
-		config = config.WithEndpoint(endpoint)
-	}
-
-	client := sqs.New(session.New(), config)
+	})
 
 	b, err := json.Marshal(payload)
 	if err != nil {
