@@ -1,7 +1,6 @@
 package log
 
 import (
-	"errors"
 	"fmt"
 	golog "log"
 	"path/filepath"
@@ -9,6 +8,7 @@ import (
 	"strings"
 
 	bugsnag "github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/errors"
 	"github.com/replicatedcom/saaskit/param"
 	"github.com/sirupsen/logrus"
 )
