@@ -47,7 +47,7 @@ func (c *ParamCache) Lookup(envName, ssmName string, decrypt bool) string {
 	if c.ssm == nil || ssmName == "" {
 		return c.envGet(envName)
 	}
-	if val, ok := c.mapGet(ssmName, decrypt); ok {
+	if val, ok := c.mapGet(ssmName); ok {
 		return val
 	}
 	val, _ := c.ssmGet(ssmName, decrypt)
@@ -76,28 +76,20 @@ func (c *ParamCache) ssmGet(ssmName string, decrypt bool) (string, bool) {
 		return "", false
 	}
 
-	val := *resp.Parameters[0].Value
-	c.mapSet(ssmName, decrypt, val)
+	val := *(resp.Parameters[0].Value)
+	c.mapSet(ssmName, val)
 	return val, true
 }
 
-func (c *ParamCache) mapGet(ssmName string, decrypt bool) (string, bool) {
+func (c *ParamCache) mapGet(ssmName string) (string, bool) {
 	c.RLock()
 	defer c.RUnlock()
-	key := ssmName
-	if decrypt {
-		key += ".decrypt"
-	}
-	val, ok := c.m[key]
+	val, ok := c.m[ssmName]
 	return val, ok
 }
 
-func (c *ParamCache) mapSet(ssmName string, decrypt bool, val string) {
+func (c *ParamCache) mapSet(ssmName string, val string) {
 	c.Lock()
 	defer c.Unlock()
-	key := ssmName
-	if decrypt {
-		key += ".decrypt"
-	}
-	c.m[key] = val
+	c.m[ssmName] = val
 }
