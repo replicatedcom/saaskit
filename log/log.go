@@ -3,29 +3,38 @@ package log
 import (
 	"fmt"
 	golog "log"
-	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	bugsnag "github.com/bugsnag/bugsnag-go"
 	"github.com/bugsnag/bugsnag-go/errors"
+	"github.com/replicatedcom/saaskit/param"
+	"github.com/sirupsen/logrus"
 )
 
 var (
 	Log Logger
-
-	projectName string
 )
 
-func init() {
-	projectName = os.Getenv("PROJECT_NAME")
-	if len(projectName) == 0 {
-		golog.Fatalf("PROJECT_NAME envvar must be set prior to configuring the saaskit logger")
+type LogOptions struct {
+	LogLevel   string
+	BugsnagKey string
+}
+
+func InitLog(opts *LogOptions) {
+	Log = NewLogger()
+	Log.Level = logrus.DebugLevel // default
+	logLevel := param.Lookup("LOG_LEVEL", "", false)
+	if logLevel != "" {
+		lvl, err := logrus.ParseLevel(logLevel)
+		if err == nil {
+			Log.Level = lvl
+		}
 	}
 
-	Log = NewLogger()
+	Log.Formatter = &ConsoleFormatter{}
+
 	Log.OnBeforeLog(func(entry *logrus.Entry) *logrus.Entry {
 		_, file, line, _ := runtime.Caller(6)
 		fields := logrus.Fields{
@@ -34,12 +43,23 @@ func init() {
 		return entry.WithFields(fields)
 	})
 
-	if os.Getenv("BUGSNAG_KEY") != "" {
+	if opts == nil {
+		return
+	}
+
+	if opts.LogLevel != "" {
+		lvl, err := logrus.ParseLevel(opts.LogLevel)
+		if err == nil {
+			Log.Level = lvl
+		}
+	}
+
+	if opts.BugsnagKey != "" {
 		bugsnag.Configure(bugsnag.Configuration{
-			ReleaseStage:        os.Getenv("BUGSNAG_ENV"),
-			APIKey:              os.Getenv("BUGSNAG_KEY"),
+			ReleaseStage:        param.Lookup("ENVIRONMENT", "/replicated/environment", false),
+			APIKey:              opts.BugsnagKey,
 			NotifyReleaseStages: []string{"production", "staging"},
-			ProjectPackages:     []string{fmt.Sprintf("%s*", projectName)},
+			ProjectPackages:     []string{fmt.Sprintf("%s*", param.Lookup("PROJECT_NAME", "", false))},
 		})
 
 		hook, err := NewBugsnagHook()
@@ -49,19 +69,6 @@ func init() {
 
 		Log.Hooks.Add(hook)
 	}
-
-	logSeverityValue := logrus.DebugLevel
-	switch os.Getenv("LOG_LEVEL") {
-	case "info":
-		logSeverityValue = logrus.InfoLevel
-	case "warning":
-		logSeverityValue = logrus.WarnLevel
-	case "error":
-		logSeverityValue = logrus.ErrorLevel
-	}
-	Log.Level = logSeverityValue
-
-	Log.Formatter = &ConsoleFormatter{}
 }
 
 func Debug(err error) {
@@ -121,6 +128,7 @@ func Errorf(format string, args ...interface{}) {
 //}
 
 func shortPath(pathIn string) string {
+	projectName := param.Lookup("PROJECT_NAME", "", false)
 	if !strings.Contains(pathIn, projectName) {
 		return pathIn
 	}
