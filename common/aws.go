@@ -25,7 +25,7 @@ func SQSDeliverMessage(queueName, action string, payload interface{}, delay int)
 	if region == "" {
 		region = "us-east-1"
 	}
-	config.WithRegion(region)
+	config = config.WithRegion(region)
 	endpoint := os.Getenv("SQS_ENDPOINT")
 	if endpoint != "" {
 		config = config.WithEndpoint(endpoint)
