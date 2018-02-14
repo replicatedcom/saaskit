@@ -71,7 +71,7 @@ func (c *ParamCache) ssmGet(ssmName string, decrypt bool) (string, bool) {
 	}
 	if len(resp.InvalidParameters) > 0 {
 		for _, p := range resp.InvalidParameters {
-			log.Printf("Failed to get ssm param %s: %v", *p, err)
+			log.Printf("Ssm param %s invalid", *p)
 		}
 		return "", false
 	}
