@@ -25,7 +25,7 @@ type LogOptions struct {
 func InitLog(opts *LogOptions) {
 	Log = NewLogger()
 	Log.Level = logrus.DebugLevel // default
-	logLevel := param.Lookup("LOG_LEVEL", "", false)
+	logLevel := param.Lookup("LOG_LEVEL", "/replicated/log_level", false)
 	if logLevel != "" {
 		lvl, err := logrus.ParseLevel(logLevel)
 		if err == nil {
