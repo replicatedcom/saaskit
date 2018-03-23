@@ -29,17 +29,15 @@ func (hook *MailAPIHook) Fire(entry *logrus.Entry) error {
 	}
 
 	context := map[string]interface{}{
-		"project_name": hook.ProjectName,
-		"time":         entry.Time.Format(mailLoggerTimeFormat),
-		"message":      entry.Message,
-		"fields":       entry.Data,
+		"time":    entry.Time.Format(mailLoggerTimeFormat),
+		"message": entry.Message,
+		"fields":  entry.Data,
+	}
+	if hook.ProjectName != "" {
+		context["project_name"] = hook.ProjectName
 	}
 
-	if err := mail.SendMailInternal("", "", recipients, "internal-log-message", subject, context); err != nil {
-		return err
-	}
-
-	return nil
+	return mail.SendMailInternal("", "", recipients, "internal-log-message", subject, context)
 }
 
 func (sh *MailAPIHook) Levels() []logrus.Level {

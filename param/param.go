@@ -69,13 +69,15 @@ func (c *ParamCache) ssmGet(ssmName string, decrypt bool) (string, bool) {
 		log.Printf("Failed to get ssm param %s: %v", ssmName, err)
 		return "", false
 	}
-	if len(resp.InvalidParameters) > 0 {
+	if os.Getenv("DEBUG") != "" && len(resp.InvalidParameters) > 0 {
 		for _, p := range resp.InvalidParameters {
 			log.Printf("Ssm param %s invalid", *p)
 		}
-		return "", false
 	}
 
+	if len(resp.Parameters) == 0 {
+		return "", false
+	}
 	val := *(resp.Parameters[0].Value)
 	c.mapSet(ssmName, val)
 	return val, true
