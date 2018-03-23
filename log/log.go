@@ -55,12 +55,15 @@ func InitLog(opts *LogOptions) {
 	}
 
 	if opts.BugsnagKey != "" {
-		bugsnag.Configure(bugsnag.Configuration{
+		config := bugsnag.Configuration{
 			ReleaseStage:        param.Lookup("ENVIRONMENT", "/replicated/environment", false),
 			APIKey:              opts.BugsnagKey,
 			NotifyReleaseStages: []string{"production", "staging"},
-			ProjectPackages:     []string{fmt.Sprintf("%s*", param.Lookup("PROJECT_NAME", "", false))},
-		})
+		}
+		if projectName := param.Lookup("PROJECT_NAME", "", false); projectName != "" {
+			config.ProjectPackages = append(config.ProjectPackages, fmt.Sprintf("%s*", projectName))
+		}
+		bugsnag.Configure(config)
 
 		hook, err := NewBugsnagHook()
 		if err != nil {
@@ -129,7 +132,7 @@ func Errorf(format string, args ...interface{}) {
 
 func shortPath(pathIn string) string {
 	projectName := param.Lookup("PROJECT_NAME", "", false)
-	if !strings.Contains(pathIn, projectName) {
+	if projectName == "" || !strings.Contains(pathIn, projectName) {
 		return pathIn
 	}
 

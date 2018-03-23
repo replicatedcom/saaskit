@@ -25,12 +25,13 @@ func InitMail(opts *MailLogOptions) {
 	}
 
 	MailLog.OnBeforeLog(func(entry *logrus.Entry) *logrus.Entry {
-		return entry.WithFields(
-			logrus.Fields{
-				"project.name": param.Lookup("PROJECT_NAME", "", false),
-				"environment":  param.Lookup("ENVIRONMENT", "/replicated/environment", false),
-			},
-		)
+		fields := logrus.Fields{
+			"environment": param.Lookup("ENVIRONMENT", "/replicated/environment", false),
+		}
+		if projectName := param.Lookup("PROJECT_NAME", "", false); projectName != "" {
+			fields["project.name"] = projectName
+		}
+		return entry.WithFields(fields)
 	})
 
 	if opts.Recipients != "" {

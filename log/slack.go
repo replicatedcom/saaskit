@@ -25,12 +25,13 @@ func InitSlack(opts *SlackLogOptions) {
 	}
 
 	SlackLog.OnBeforeLog(func(entry *logrus.Entry) *logrus.Entry {
-		return entry.WithFields(
-			logrus.Fields{
-				"project.name": param.Lookup("PROJECT_NAME", "", false),
-				"environment":  param.Lookup("ENVIRONMENT", "/replicated/environment", false),
-			},
-		)
+		fields := logrus.Fields{
+			"environment": param.Lookup("ENVIRONMENT", "/replicated/environment", false),
+		}
+		if projectName := param.Lookup("PROJECT_NAME", "", false); projectName != "" {
+			fields["project.name"] = projectName
+		}
+		return entry.WithFields(fields)
 	})
 
 	slackLogHookURL := param.Lookup("SLACKLOG_HOOK_URL", "/slack/hook_url", true)
