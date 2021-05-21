@@ -1,2 +1,2 @@
 # saaskit
-This is our private toolkit shared between SaaS components.
+This is our toolkit shared between SaaS components.
