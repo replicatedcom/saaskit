@@ -1,8 +1,8 @@
 package log
 
 import (
-	"github.com/sirupsen/logrus"
 	slack "github.com/johntdyer/slack-go"
+	"github.com/sirupsen/logrus"
 )
 
 type SlackHook struct {
@@ -83,7 +83,7 @@ func (hook *SlackHook) Fire(entry *logrus.Entry) error {
 }
 
 func (hook *SlackHook) initClient() error {
-	hook.c = &slack.Client{hook.HookURL}
+	hook.c = &slack.Client{Url: hook.HookURL}
 
 	if hook.Username == "" {
 		hook.Username = "logger"
