@@ -42,22 +42,21 @@ func (f *Finishable) Finish() {
 // a wrapped Nil, which is safe to Finish() and the gin context's HTTP
 // request context
 func StartSpanFromGin(c *gin.Context) (*Finishable, context.Context) {
-	if datadogEnabled() {
-		var spanName string
-		rctx := c.Request.Context()
-		pc, _, _, ok := runtime.Caller(1)
-		if !ok {
-			spanName = "undefined"
-		} else {
-			spanName = runtime.FuncForPC(pc).Name()
-		}
-		span, ctx := tracer.StartSpanFromContext(rctx, spanName)
-		return &Finishable{
-			toFinish: span,
-		}, ctx
-	} else {
+	if !datadogEnabled() {
 		return &Finishable{nil}, c.Request.Context()
 	}
+	var spanName string
+	rctx := c.Request.Context()
+	pc, _, _, ok := runtime.Caller(1)
+	if !ok {
+		spanName = "undefined"
+	} else {
+		spanName = runtime.FuncForPC(pc).Name()
+	}
+	span, ctx := tracer.StartSpanFromContext(rctx, spanName)
+	return &Finishable{
+		toFinish: span,
+	}, ctx
 }
 
 // GinMiddleware wraps gin tracer's middleware
@@ -68,12 +67,13 @@ func GinMiddleware(service string) gin.HandlerFunc {
 
 // StartTracer starts the tracer, taking a Service name and version
 func StartTracer(serviceName, version string) {
-	if datadogEnabled() {
-		tracer.Start(
-			tracer.WithService(serviceName),
-			tracer.WithServiceVersion(version),
-		)
+	if !datadogEnabled() {
+		return
 	}
+	tracer.Start(
+		tracer.WithService(serviceName),
+		tracer.WithServiceVersion(version),
+	)
 }
 
 // StopTracer stops the tracer, typically called with defer in the same
@@ -97,9 +97,8 @@ func RegisterSQL(driverName string, driver driver.Driver, dbName string) {
 func OpenSQL(driverName, dataSourceName string) (*sql.DB, error) {
 	if datadogEnabled() {
 		return sqltrace.Open(driverName, dataSourceName)
-	} else {
-		return sql.Open(driverName, dataSourceName)
 	}
+	return sql.Open(driverName, dataSourceName)
 }
 
 func datadogEnabled() bool {
