@@ -20,6 +20,7 @@ var (
 type LogOptions struct {
 	LogLevel   string
 	BugsnagKey string
+	AppVersion string
 }
 
 func InitLog(opts *LogOptions) {
@@ -59,6 +60,7 @@ func InitLog(opts *LogOptions) {
 			ReleaseStage:        param.Lookup("ENVIRONMENT", "/replicated/environment", false),
 			APIKey:              opts.BugsnagKey,
 			NotifyReleaseStages: []string{"production", "staging"},
+			AppVersion:          opts.AppVersion,
 		}
 		if projectName := param.Lookup("PROJECT_NAME", "", false); projectName != "" {
 			config.ProjectPackages = append(config.ProjectPackages, fmt.Sprintf("%s*", projectName))
