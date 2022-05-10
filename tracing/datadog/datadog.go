@@ -76,6 +76,18 @@ func StartTracer(serviceName, version string) {
 	)
 }
 
+func StartTracerDebug(serviceName, version string) {
+	if !datdogEnabled() {
+		return
+	}
+	tracer.Start(
+		tracer.WithService(serviceName),
+		tracer.WithServiceVersion(version),
+		tracer.WithDebugMode(true),
+	)
+}
+
+
 // StopTracer stops the tracer, typically called with defer in the same
 // scope as StartTracer.
 func StopTracer() {
