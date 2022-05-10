@@ -76,8 +76,9 @@ func StartTracer(serviceName, version string) {
 	)
 }
 
+// StartTracerDebug starts the tracer with debug mode enabled, taking a service name and version
 func StartTracerDebug(serviceName, version string) {
-	if !datdogEnabled() {
+	if !datadogEnabled() {
 		return
 	}
 	tracer.Start(
