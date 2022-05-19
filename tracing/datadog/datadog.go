@@ -88,6 +88,18 @@ func StartTracerDebug(serviceName, version string) {
 	)
 }
 
+// StartTracerWithAddr starts the tracer with the datadog agent hostname set. This is used for ECS
+func StartTracerWithAddr(serviceName, tracerAddr, version string) {
+	if !datadogEnabled() {
+		return
+	}
+	tracer.Start(
+		tracer.WithService(serviceName),
+		tracer.WithServiceVersion(version),
+		tracer.WithAgentAddr(tracerAddr),
+	)
+}
+
 
 // StopTracer stops the tracer, typically called with defer in the same
 // scope as StartTracer.
