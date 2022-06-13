@@ -50,7 +50,7 @@ func StartSpanFromGin(c *gin.Context) (*Finishable, context.Context) {
 // a wrapped Nil, which is safe to Finish() and the gin context's HTTP
 // request context
 func StartSpanFromContext(ctx context.Context, callStackOffset ...int) (*Finishable, context.Context) {
-	offset = 1
+	offset := 1
 	if len(callStackOffset) > 0 {
 		offset = callStackOffset[0]
 	}
