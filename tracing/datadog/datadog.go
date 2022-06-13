@@ -42,21 +42,38 @@ func (f *Finishable) Finish() {
 // a wrapped Nil, which is safe to Finish() and the gin context's HTTP
 // request context
 func StartSpanFromGin(c *gin.Context) (*Finishable, context.Context) {
+	return StartSpanFromContext(c, 2)
+}
+
+// StartSpanFromContext takes a context and returns a wrapped Span plus
+// the span's context. If Datadog APM isn't enabled it simply returns
+// a wrapped Nil, which is safe to Finish() and the gin context's HTTP
+// request context
+func StartSpanFromContext(ctx context.Context, callStackOffset ...int) (*Finishable, context.Context) {
+	offset = 1
+	if len(callStackOffset) > 0 {
+		offset = callStackOffset[0]
+	}
+
+	rctx := ctx
+	if c, ok := ctx.(*gin.Context); ok {
+		rctx = c.Request.Context()
+	}
+
 	if !datadogEnabled() {
-		return &Finishable{nil}, c.Request.Context()
+		return &Finishable{nil}, ctx
 	}
 	var spanName string
-	rctx := c.Request.Context()
-	pc, _, _, ok := runtime.Caller(1)
+	pc, _, _, ok := runtime.Caller(offset)
 	if !ok {
 		spanName = "undefined"
 	} else {
 		spanName = runtime.FuncForPC(pc).Name()
 	}
-	span, ctx := tracer.StartSpanFromContext(rctx, spanName)
+	span, subCtx := tracer.StartSpanFromContext(rctx, spanName)
 	return &Finishable{
 		toFinish: span,
-	}, ctx
+	}, subCtx
 }
 
 // GinMiddleware wraps gin tracer's middleware
@@ -113,7 +130,6 @@ func StartTracerDebugWithAddr(serviceName, tracerAddr, version string) {
 		tracer.WithDebugMode(true),
 	)
 }
-
 
 // StopTracer stops the tracer, typically called with defer in the same
 // scope as StartTracer.
