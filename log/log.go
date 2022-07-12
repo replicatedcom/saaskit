@@ -1,6 +1,8 @@
 package log
 
 import (
+	"context"
+	goerrors "errors"
 	"fmt"
 	golog "log"
 	"path/filepath"
@@ -66,6 +68,15 @@ func InitLog(opts *LogOptions) {
 			config.ProjectPackages = append(config.ProjectPackages, fmt.Sprintf("%s*", projectName))
 		}
 		bugsnag.Configure(config)
+
+		bugsnag.OnBeforeNotify(func(event *bugsnag.Event, config *bugsnag.Configuration) error {
+			if goerrors.Is(event.Error, context.Canceled) {
+				return goerrors.New("will not notify about context canceled")
+			}
+
+			// continue notifying as normal
+			return nil
+		})
 
 		hook, err := NewBugsnagHook()
 		if err != nil {
