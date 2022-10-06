@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"strings"
 
-	bugsnag "github.com/bugsnag/bugsnag-go"
-	"github.com/bugsnag/bugsnag-go/errors"
+	bugsnag "github.com/bugsnag/bugsnag-go/v2"
+	"github.com/bugsnag/bugsnag-go/v2/errors"
 	"github.com/replicatedcom/saaskit/param"
 	"github.com/sirupsen/logrus"
 )

@@ -5,15 +5,11 @@ go 1.16
 require (
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/aws/aws-sdk-go v1.38.45
-	github.com/bitly/go-simplejson v0.5.0 // indirect
-	github.com/bugsnag/bugsnag-go v2.1.1+incompatible
-	github.com/bugsnag/panicwrap v1.3.2 // indirect
+	github.com/bugsnag/bugsnag-go/v2 v2.1.2
 	github.com/gin-gonic/gin v1.7.1
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/johntdyer/slack-go v0.0.0-20180213144715-95fac1160b22
-	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/mattn/go-sqlite3 v1.14.7 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
