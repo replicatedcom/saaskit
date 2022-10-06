@@ -3,7 +3,7 @@ package log
 import (
 	"errors"
 
-	"github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/v2"
 	"github.com/sirupsen/logrus"
 )
 
