@@ -69,14 +69,7 @@ func InitLog(opts *LogOptions) {
 		}
 		bugsnag.Configure(config)
 
-		bugsnag.OnBeforeNotify(func(event *bugsnag.Event, config *bugsnag.Configuration) error {
-			if goerrors.Is(event.Error, context.Canceled) {
-				return goerrors.New("will not notify about context canceled")
-			}
-
-			// continue notifying as normal
-			return nil
-		})
+		bugsnag.OnBeforeNotify(filterEvents)
 
 		hook, err := NewBugsnagHook()
 		if err != nil {
@@ -169,4 +162,15 @@ func shortPath(pathIn string) string {
 	}
 
 	return strings.Join(resultToks, string(filepath.Separator))
+}
+
+var filteredErr = goerrors.New("will not notify about context canceled")
+
+func filterEvents(event *bugsnag.Event, config *bugsnag.Configuration) error {
+	if goerrors.Is(event.Error.Err, context.Canceled) {
+		return filteredErr
+	}
+
+	// continue notifying as normal
+	return nil
 }
