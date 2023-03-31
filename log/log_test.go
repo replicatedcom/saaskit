@@ -23,7 +23,7 @@ func TestFilterEvents(t *testing.T) {
 		// so we can write tests that InitLog and call Error(), et all
 		{"context canceled, bare", *errors.New(context.Canceled, 1), filteredErr},
 		{"context canceled, wrapped in fmt", *errors.New(fmt.Errorf("wrapped %w", context.Canceled), 1), filteredErr},
-		{"context canceled, wrapped in with Wrap()", *errors.New(perrors.Wrap(context.Canceled, "wrapped"), 1), filteredErr},
+		{"context canceled, wrapped with Wrap()", *errors.New(perrors.Wrap(context.Canceled, "wrapped"), 1), filteredErr},
 		{"context canceled, unwrapped", *errors.New(fmt.Errorf("unwrapped %v", context.Canceled), 1), nil},
 		{"other, bare", *errors.New(goerrors.New("other"), 1), nil},
 	}
