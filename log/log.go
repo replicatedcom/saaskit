@@ -27,16 +27,16 @@ type LogOptions struct {
 
 func InitLog(opts *LogOptions) {
 	Log = NewLogger()
-	Log.Level = logrus.DebugLevel // default
+	Log.SetLevel(logrus.DebugLevel) // default
 	logLevel := param.Lookup("LOG_LEVEL", "/replicated/log_level", false)
 	if logLevel != "" {
 		lvl, err := logrus.ParseLevel(logLevel)
 		if err == nil {
-			Log.Level = lvl
+			Log.SetLevel(lvl)
 		}
 	}
 
-	Log.Formatter = &ConsoleFormatter{}
+	Log.SetFormatter(&ConsoleFormatter{})
 
 	Log.OnBeforeLog(func(entry *logrus.Entry) *logrus.Entry {
 		_, file, line, _ := runtime.Caller(6)
@@ -53,7 +53,7 @@ func InitLog(opts *LogOptions) {
 	if opts.LogLevel != "" {
 		lvl, err := logrus.ParseLevel(opts.LogLevel)
 		if err == nil {
-			Log.Level = lvl
+			Log.SetLevel(lvl)
 		}
 	}
 
@@ -76,12 +76,12 @@ func InitLog(opts *LogOptions) {
 			golog.Fatal(err)
 		}
 
-		Log.Hooks.Add(hook)
+		Log.AddHook(hook)
 	}
 }
 
-func Debug(err error) {
-	Log.Debugf(err.Error())
+func Debug(args ...interface{}) {
+	Log.Debug(args...)
 }
 func Debugf(format string, args ...interface{}) {
 	Log.Debugf(format, args...)
@@ -91,8 +91,8 @@ func Debugf(format string, args ...interface{}) {
 // 	Log.WithFields(fields).Debugf(format)
 //}
 
-func Info(err error) {
-	Log.Infof(err.Error())
+func Info(args ...interface{}) {
+	Log.Info(args...)
 }
 func Infof(format string, args ...interface{}) {
 	Log.Infof(format, args...)
@@ -102,10 +102,10 @@ func Infof(format string, args ...interface{}) {
 // 	Log.WithFields(fields).Infof(format)
 //}
 
-func Warning(err error) {
-	err = errors.New(err, 1)
+func Warning(args ...interface{}) {
+	err := errors.New(fmt.Sprint(args...), 1)
 	errFields := logrus.Fields{"saaskit.error": err}
-	Log.WithFields(errFields).Warningf(err.Error())
+	Log.WithFields(errFields).Warning(args...)
 }
 func Warningf(format string, args ...interface{}) {
 	err := errors.New(fmt.Errorf(format, args...), 1)
@@ -119,15 +119,26 @@ func Warningf(format string, args ...interface{}) {
 // 	Log.WithFields(errFields).WithFields(fields).Warningf(message)
 //}
 
-func Error(err error) {
-	err = errors.New(err, 1)
+func Error(args ...interface{}) {
+	err := errors.New(fmt.Sprint(args...), 1)
 	errFields := logrus.Fields{"saaskit.error": err}
-	Log.WithFields(errFields).Errorf(err.Error())
+	Log.WithFields(errFields).Error(args...)
 }
 func Errorf(format string, args ...interface{}) {
 	err := errors.New(fmt.Errorf(format, args...), 1)
 	errFields := logrus.Fields{"saaskit.error": err}
 	Log.WithFields(errFields).Errorf(err.Error())
+}
+
+func Fatal(args ...interface{}) {
+	err := errors.New(fmt.Sprint(args...), 1)
+	errFields := logrus.Fields{"saaskit.error": err}
+	Log.WithFields(errFields).Fatal(args...)
+}
+func Fatalf(format string, args ...interface{}) {
+	err := errors.New(fmt.Errorf(format, args...), 1)
+	errFields := logrus.Fields{"saaskit.error": err}
+	Log.WithFields(errFields).Fatalf(err.Error())
 }
 
 //func ErrorFields(format string, fields logrus.Fields) {

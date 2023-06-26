@@ -18,7 +18,7 @@ type MailLogOptions struct {
 
 func InitMail(opts *MailLogOptions) {
 	MailLog = NewLogger()
-	MailLog.Logger.Out = ioutil.Discard
+	MailLog.SetOutput(ioutil.Discard)
 
 	if opts == nil {
 		return
@@ -36,7 +36,7 @@ func InitMail(opts *MailLogOptions) {
 
 	if opts.Recipients != "" {
 		recipients := strings.Split(opts.Recipients, ",")
-		MailLog.Hooks.Add(&MailAPIHook{
+		MailLog.AddHook(&MailAPIHook{
 			ProjectName: param.Lookup("PROJECT_NAME", "", false),
 			Recipients:  recipients,
 		})

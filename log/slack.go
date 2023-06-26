@@ -18,7 +18,7 @@ type SlackLogOptions struct {
 
 func InitSlack(opts *SlackLogOptions) {
 	SlackLog = NewLogger()
-	SlackLog.Logger.Out = ioutil.Discard
+	MailLog.SetOutput(ioutil.Discard)
 
 	if opts == nil {
 		return
@@ -46,7 +46,7 @@ func InitSlack(opts *SlackLogOptions) {
 			slacklogUsername = "chatops"
 		}
 
-		SlackLog.Hooks.Add(&SlackHook{
+		SlackLog.AddHook(&SlackHook{
 			HookURL:  slackLogHookURL,
 			Channel:  slacklogChannel,
 			Username: slacklogUsername,
