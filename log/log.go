@@ -94,10 +94,6 @@ func Debugf(format string, args ...interface{}) {
 	Log.Debugf(format, args...)
 }
 
-//func DebugFields(format string, fields logrus.Fields) {
-// 	Log.WithFields(fields).Debugf(format)
-//}
-
 func Info(args ...interface{}) {
 	Log.Info(args...)
 }
@@ -105,56 +101,32 @@ func Infof(format string, args ...interface{}) {
 	Log.Infof(format, args...)
 }
 
-//func InfoFields(format string, fields logrus.Fields) {
-// 	Log.WithFields(fields).Infof(format)
-//}
-
 func Warning(args ...interface{}) {
-	errFields := logrus.Fields{"saaskit.error": getSaaskitError(args, 1)}
-	Log.WithFields(errFields).Warning(args...)
+	Log.WithFields(getSaaskitError(args, 1)).Warning(args...)
 }
 func Warningf(format string, args ...interface{}) {
-	errFields := logrus.Fields{"saaskit.error": getSaaskitError(nil, 1)}
-	Log.WithFields(errFields).Warningf(format, args...)
+	Log.WithFields(getSaaskitErrorf(format, args, 1)).Warningf(format, args...)
 }
 func Warn(args ...interface{}) {
-	errFields := logrus.Fields{"saaskit.error": getSaaskitError(args, 1)}
-	Log.WithFields(errFields).Warning(args...)
+	Log.WithFields(getSaaskitError(args, 1)).Warning(args...)
 }
 func Warnf(format string, args ...interface{}) {
-	errFields := logrus.Fields{"saaskit.error": getSaaskitError(nil, 1)}
-	Log.WithFields(errFields).Warningf(format, args...)
+	Log.WithFields(getSaaskitErrorf(format, args, 1)).Warningf(format, args...)
 }
-
-//func WarningFields(format string, fields logrus.Fields) {
-//	err := errors.New(fmt.Errorf(format, args...), 1)
-//	errFields := logrus.Fields{"saaskit.error": err}
-// 	Log.WithFields(errFields).WithFields(fields).Warningf(message)
-//}
 
 func Error(args ...interface{}) {
-	errFields := logrus.Fields{"saaskit.error": getSaaskitError(args, 1)}
-	Log.WithFields(errFields).Error(args...)
+	Log.WithFields(getSaaskitError(args, 1)).Error(args...)
 }
 func Errorf(format string, args ...interface{}) {
-	errFields := logrus.Fields{"saaskit.error": getSaaskitError(nil, 1)}
-	Log.WithFields(errFields).Errorf(format, args...)
+	Log.WithFields(getSaaskitErrorf(format, args, 1)).Errorf(format, args...)
 }
 
 func Fatal(args ...interface{}) {
-	errFields := logrus.Fields{"saaskit.error": getSaaskitError(args, 1)}
-	Log.WithFields(errFields).Fatal(args...)
+	Log.WithFields(getSaaskitError(args, 1)).Fatal(args...)
 }
 func Fatalf(format string, args ...interface{}) {
-	errFields := logrus.Fields{"saaskit.error": getSaaskitError(nil, 1)}
-	Log.WithFields(errFields).Fatalf(format, args...)
+	Log.WithFields(getSaaskitErrorf(format, args, 1)).Fatalf(format, args...)
 }
-
-//func ErrorFields(format string, fields logrus.Fields) {
-//	err := errors.New(fmt.Errorf(format, args...), 1)
-//	errFields := logrus.Fields{"saaskit.error": err}
-// 	Log.WithFields(errFields).WithFields(fields).Errorf(message)
-//}
 
 func shortPath(pathIn string) string {
 	projectName := param.Lookup("PROJECT_NAME", "", false)
@@ -195,12 +167,14 @@ func filterEvents(event *bugsnag.Event, config *bugsnag.Configuration) error {
 	return nil
 }
 
-func getSaaskitError(args []interface{}, skip int) error {
-	if len(args) > 0 {
-		err, ok := args[0].(error)
-		if ok {
-			return err
-		}
+func getSaaskitError(args []interface{}, skip int) logrus.Fields {
+	if err, ok := args[0].(error); ok {
+		return logrus.Fields{"saaskit.error": err}
+	} else {
+		return getSaaskitError([]interface{}{errors.New(fmt.Sprint(args...), skip+1)}, 0)
 	}
-	return errors.New(fmt.Sprint(args...), skip+1)
+}
+
+func getSaaskitErrorf(format string, args []interface{}, skip int) logrus.Fields {
+	return getSaaskitError([]interface{}{errors.New(fmt.Sprintf(format, args...), skip+1)}, 0)
 }
