@@ -17,7 +17,7 @@ type SlackLogOptions struct {
 }
 
 func InitSlack(opts *SlackLogOptions) {
-	SlackLog = NewLogger()
+	SlackLog = newLogger()
 	MailLog.SetOutput(ioutil.Discard)
 
 	if opts == nil {

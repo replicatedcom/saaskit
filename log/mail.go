@@ -17,7 +17,7 @@ type MailLogOptions struct {
 }
 
 func InitMail(opts *MailLogOptions) {
-	MailLog = NewLogger()
+	MailLog = newLogger()
 	MailLog.SetOutput(ioutil.Discard)
 
 	if opts == nil {

@@ -12,7 +12,7 @@ type Logger struct {
 	middleware middlewareStack
 }
 
-func NewLogger() Logger {
+func newLogger() Logger {
 	return Logger{logrus.New(), middlewareStack{}}
 }
 
@@ -41,6 +41,10 @@ func (logger *Logger) SetFormatter(formatter logrus.Formatter) {
 
 func (logger *Logger) SetOutput(output io.Writer) {
 	logger.logger.SetOutput(output)
+}
+
+func (logger *Logger) SetReportCaller(reportCaller bool) {
+	logger.logger.SetReportCaller(reportCaller)
 }
 
 func (logger *Logger) OnBeforeLog(callback beforeFunc) {
@@ -99,7 +103,21 @@ func (logger *Logger) Warning(args ...interface{}) {
 	}
 }
 
+func (logger *Logger) Warn(args ...interface{}) {
+	if logger.IsLevelEnabled(logrus.WarnLevel) {
+		entry := logrus.NewEntry(logger.logger)
+		runMiddleware(entry, logger.middleware).Warning(args...)
+	}
+}
+
 func (logger *Logger) Warningf(format string, args ...interface{}) {
+	if logger.IsLevelEnabled(logrus.WarnLevel) {
+		entry := logrus.NewEntry(logger.logger)
+		runMiddleware(entry, logger.middleware).Warningf(format, args...)
+	}
+}
+
+func (logger *Logger) Warnf(format string, args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.WarnLevel) {
 		entry := logrus.NewEntry(logger.logger)
 		runMiddleware(entry, logger.middleware).Warningf(format, args...)
