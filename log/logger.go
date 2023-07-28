@@ -64,6 +64,7 @@ func (logger *Logger) WithFields(fields logrus.Fields) *logrus.Entry {
 func (logger *Logger) Debug(args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.DebugLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Debug(args...)
 	}
 }
@@ -71,6 +72,7 @@ func (logger *Logger) Debug(args ...interface{}) {
 func (logger *Logger) Debugf(format string, args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.DebugLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Debugf(format, args...)
 	}
 }
@@ -78,6 +80,7 @@ func (logger *Logger) Debugf(format string, args ...interface{}) {
 func (logger *Logger) Info(args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.InfoLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Info(args...)
 	}
 }
@@ -85,6 +88,7 @@ func (logger *Logger) Info(args ...interface{}) {
 func (logger *Logger) Infof(format string, args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.InfoLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Infof(format, args...)
 	}
 }
@@ -92,6 +96,7 @@ func (logger *Logger) Infof(format string, args ...interface{}) {
 func (logger *Logger) Printf(format string, args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.InfoLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Printf(format, args...)
 	}
 }
@@ -99,6 +104,7 @@ func (logger *Logger) Printf(format string, args ...interface{}) {
 func (logger *Logger) Warning(args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.WarnLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Warning(args...)
 	}
 }
@@ -106,6 +112,7 @@ func (logger *Logger) Warning(args ...interface{}) {
 func (logger *Logger) Warn(args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.WarnLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Warning(args...)
 	}
 }
@@ -113,6 +120,7 @@ func (logger *Logger) Warn(args ...interface{}) {
 func (logger *Logger) Warningf(format string, args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.WarnLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Warningf(format, args...)
 	}
 }
@@ -120,6 +128,7 @@ func (logger *Logger) Warningf(format string, args ...interface{}) {
 func (logger *Logger) Warnf(format string, args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.WarnLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Warningf(format, args...)
 	}
 }
@@ -127,6 +136,7 @@ func (logger *Logger) Warnf(format string, args ...interface{}) {
 func (logger *Logger) Error(args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.ErrorLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Error(args...)
 	}
 }
@@ -134,6 +144,7 @@ func (logger *Logger) Error(args ...interface{}) {
 func (logger *Logger) Errorf(format string, args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.ErrorLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Errorf(format, args...)
 	}
 }
@@ -141,6 +152,7 @@ func (logger *Logger) Errorf(format string, args ...interface{}) {
 func (logger *Logger) Fatal(args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.FatalLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Fatal(args...)
 	}
 	os.Exit(1)
@@ -149,6 +161,7 @@ func (logger *Logger) Fatal(args ...interface{}) {
 func (logger *Logger) Fatalf(format string, args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.FatalLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Fatalf(format, args...)
 	}
 	os.Exit(1)
@@ -157,6 +170,7 @@ func (logger *Logger) Fatalf(format string, args ...interface{}) {
 func (logger *Logger) Panic(args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.PanicLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Panic(args...)
 	}
 }
@@ -164,6 +178,7 @@ func (logger *Logger) Panic(args ...interface{}) {
 func (logger *Logger) Panicf(format string, args ...interface{}) {
 	if logger.IsLevelEnabled(logrus.PanicLevel) {
 		entry := logrus.NewEntry(logger.logger)
+		setCaller(entry)
 		runMiddleware(entry, logger.middleware).Panicf(format, args...)
 	}
 }
