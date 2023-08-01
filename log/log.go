@@ -176,5 +176,5 @@ func getSaaskitError(args []interface{}, skip int) logrus.Fields {
 }
 
 func getSaaskitErrorf(format string, args []interface{}, skip int) logrus.Fields {
-	return getSaaskitError([]interface{}{errors.New(fmt.Sprintf(format, args...), skip+1)}, 0)
+	return getSaaskitError([]interface{}{errors.New(fmt.Errorf(format, args...), skip+1)}, 0)
 }
