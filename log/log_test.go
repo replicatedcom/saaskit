@@ -185,3 +185,34 @@ type myError struct {
 func (e myError) Error() string {
 	return "my error"
 }
+
+func Test_getSaaskitErrorf(t *testing.T) {
+	type args struct {
+		format string
+		args   []interface{}
+		skip   int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "test with wrap verb",
+			args: args{
+				format: "test %w",
+				args:   []interface{}{goerrors.New("error")},
+				skip:   0,
+			},
+			want: "test error",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotFields := getSaaskitErrorf(tt.args.format, tt.args.args, tt.args.skip)
+			if got := gotFields["saaskit.error"].(error).Error(); got != tt.want {
+				t.Errorf("getSaaskitErrorf() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
