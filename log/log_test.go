@@ -5,7 +5,6 @@ import (
 	"context"
 	goerrors "errors"
 	"fmt"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -42,40 +41,25 @@ func TestFilterEvents(t *testing.T) {
 	}
 }
 
-func TestLogMiddleware(t *testing.T) {
+func TestCallerHook(t *testing.T) {
 	param.Init(nil)
 
-	h := &hook{}
+	h := &CallerHook{}
 
 	out := bytes.NewBuffer(nil)
 	log := newLogger()
 	log.SetOutput(out)
+	log.logger.AddHook(h)
+	log.SetFormatter(&ConsoleFormatter{})
 
-	log.OnBeforeLog(func(entry *logrus.Entry) *logrus.Entry {
-		_, file, line, _ := runtime.Caller(5)
-		fields := logrus.Fields{
-			"saaskit.file_loc": fmt.Sprintf("%s:%d", shortPath(file), line),
-		}
-		return entry.WithFields(fields)
-	})
-
-	log.AddHook(h)
-
-	log.Error("test")
-	assert.Contains(t, out.String(), "saaskit.file_loc")
-
-	assert.Len(t, h.entries, 1)
-	assert.Contains(t, h.entries[0].Data, "saaskit.file_loc")
+	log.Error("test 1")
+	assert.Contains(t, out.String(), "testing.go:")
 
 	out = bytes.NewBuffer(nil)
 	log.SetOutput(out)
-	h.reset()
 
-	log.WithField("test", "test").WithField("test2", "test2").Error("test")
-	assert.Contains(t, out.String(), "saaskit.file_loc")
-
-	assert.Len(t, h.entries, 1)
-	assert.Contains(t, h.entries[0].Data, "saaskit.file_loc")
+	log.WithField("test", "test").WithField("test2", "test2").Error("test 2")
+	assert.Contains(t, out.String(), "testing.go:")
 }
 
 func TestSaaskitError(t *testing.T) {
