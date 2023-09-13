@@ -5,9 +5,6 @@ import (
 	goerrors "errors"
 	"fmt"
 	golog "log"
-	"path/filepath"
-	"runtime"
-	"strings"
 
 	bugsnag "github.com/bugsnag/bugsnag-go/v2"
 	"github.com/bugsnag/bugsnag-go/v2/errors"
@@ -38,13 +35,7 @@ func InitLog(opts *LogOptions) {
 
 	Log.SetFormatter(&ConsoleFormatter{})
 
-	Log.OnBeforeLog(func(entry *logrus.Entry) *logrus.Entry {
-		_, file, line, _ := runtime.Caller(6)
-		fields := logrus.Fields{
-			"saaskit.file_loc": fmt.Sprintf("%s:%d", shortPath(file), line),
-		}
-		return entry.WithFields(fields)
-	})
+	Log.logger.AddHook(&CallerHook{})
 
 	if opts == nil {
 		return
@@ -130,34 +121,6 @@ func Fatal(args ...interface{}) {
 }
 func Fatalf(format string, args ...interface{}) {
 	Log.WithFields(getSaaskitErrorf(format, args, 1)).Fatalf(format, args...)
-}
-
-func shortPath(pathIn string) string {
-	projectName := param.Lookup("PROJECT_NAME", "", false)
-	if projectName == "" || !strings.Contains(pathIn, projectName) {
-		return pathIn
-	}
-
-	toks := strings.Split(pathIn, string(filepath.Separator))
-	var resultToks []string
-	for i := len(toks) - 1; i >= 0; i-- {
-		t := toks[i]
-		if t == projectName && i < len(toks)-1 {
-			resultToks = toks[i+1:]
-			break
-		}
-	}
-
-	if resultToks == nil {
-		return pathIn
-	}
-
-	// Truncate absurdly long paths even if they don't match our project name (e.g. godeps).
-	if len(resultToks) > 4 {
-		resultToks = resultToks[len(resultToks)-3:]
-	}
-
-	return strings.Join(resultToks, string(filepath.Separator))
 }
 
 var filteredErr = goerrors.New("will not notify about context canceled")

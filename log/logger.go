@@ -31,6 +31,11 @@ func (logger *Logger) AddHook(hook logrus.Hook) {
 	logger.logger.AddHook(hook)
 }
 
+// ReplaceHooks replaces the logger hooks and returns the old ones
+func (logger *Logger) ReplaceHooks(hooks logrus.LevelHooks) logrus.LevelHooks {
+	return logger.logger.ReplaceHooks(hooks)
+}
+
 func (logger *Logger) IsLevelEnabled(level logrus.Level) bool {
 	return logger.logger.IsLevelEnabled(level)
 }
