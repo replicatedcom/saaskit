@@ -18,8 +18,12 @@ func (cf *ConsoleFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	formattedTime := entry.Time.Format("2006/01/02 15:04:05")
 	formattedLevel := strings.ToUpper(entry.Level.String())
 
-	caller := fmt.Sprintf("%s:%d", shortPath(entry.Caller.File), entry.Caller.Line)
-	fmt.Fprintf(result, "%s %s %s %s", formattedLevel, formattedTime, caller, entry.Message)
+	if entry.Caller == nil {
+		fmt.Fprintf(result, "%s %s %s", formattedLevel, formattedTime, entry.Message)
+	} else {
+		caller := fmt.Sprintf("%s:%d", shortPath(entry.Caller.File), entry.Caller.Line)
+		fmt.Fprintf(result, "%s %s %s %s", formattedLevel, formattedTime, caller, entry.Message)
+	}
 
 	for k, v := range entry.Data {
 		if strings.HasPrefix(k, "saaskit.") {
