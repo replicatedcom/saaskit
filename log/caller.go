@@ -62,6 +62,19 @@ func getPackageName(f string) string {
 
 // getCaller retrieves the name of the first non-logrus calling function
 func getCaller() *runtime.Frame {
+	depth := getCallerDepth()
+
+	pcs := make([]uintptr, 1)
+	n := runtime.Callers(depth-1, pcs[:])
+	if n < 1 {
+		return nil
+	}
+	frame, _ := runtime.CallersFrames(pcs).Next()
+	return &frame
+}
+
+// getCallerDepth retrieves the depth of the first non-logrus calling function
+func getCallerDepth() int {
 	// cache this package's fully-qualified name
 	callerInitOnce.Do(func() {
 		pcs := make([]uintptr, maximumCallerDepth)
@@ -83,16 +96,18 @@ func getCaller() *runtime.Frame {
 	pcs := make([]uintptr, maximumCallerDepth)
 	depth := runtime.Callers(minimumCallerDepth, pcs)
 	frames := runtime.CallersFrames(pcs[:depth])
-
-	for f, again := frames.Next(); again; f, again = frames.Next() {
+	for i := 0; ; i++ {
+		f, more := frames.Next()
 		pkg := getPackageName(f.Function)
 
 		// If the caller isn't part of this package, we're done
 		if pkg != ourPackage && pkg != logrusPackage {
-			return &f //nolint:scopelint
+			return i + minimumCallerDepth
+		}
+
+		// If we've reached the top of the stack, we're done
+		if !more {
+			return i + minimumCallerDepth
 		}
 	}
-
-	// if we got here, we failed to find the caller's context
-	return nil
 }
