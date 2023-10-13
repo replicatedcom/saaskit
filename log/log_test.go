@@ -81,7 +81,7 @@ func TestSaaskitError(t *testing.T) {
 		{
 			name:        "bugsnag error",
 			args:        []interface{}{"test1", "test2"},
-			wantErrType: &errors.Error{},
+			wantErrType: fmt.Errorf("blah"),
 		},
 	}
 	for _, tt := range tests {
@@ -96,10 +96,12 @@ func TestSaaskitError(t *testing.T) {
 
 			require.Len(t, h.entries, 1)
 			require.Contains(t, h.entries[0].Data, "saaskit.error")
-			assert.IsType(t, tt.wantErrType, h.entries[0].Data["saaskit.error"])
 			if bugsnagErr, ok := h.entries[0].Data["saaskit.error"].(*errors.Error); ok {
+				assert.IsType(t, tt.wantErrType, bugsnagErr.Err)
 				firstLine := strings.Split(string(bugsnagErr.Stack()), "\n")[0]
 				assert.Contains(t, firstLine, "log_test.go:")
+			} else {
+				assert.IsType(t, tt.wantErrType, h.entries[0].Data["saaskit.error"])
 			}
 		})
 	}
@@ -112,14 +114,16 @@ func TestSaaskitErrorf(t *testing.T) {
 	Log.SetLevel(logrus.DebugLevel) // default
 
 	tests := []struct {
-		name   string
-		format string
-		args   []interface{}
+		name        string
+		format      string
+		args        []interface{}
+		wantErrType interface{}
 	}{
 		{
-			name:   "bugsnag error",
-			format: "test %s %s",
-			args:   []interface{}{"test1", "test2"},
+			name:        "bugsnag error",
+			format:      "test %s %s",
+			args:        []interface{}{"test1", "test2"},
+			wantErrType: fmt.Errorf("blah"),
 		},
 	}
 	for _, tt := range tests {
@@ -134,10 +138,13 @@ func TestSaaskitErrorf(t *testing.T) {
 
 			require.Len(t, h.entries, 1)
 			require.Contains(t, h.entries[0].Data, "saaskit.error")
-			assert.IsType(t, &errors.Error{}, h.entries[0].Data["saaskit.error"])
-			bugsnagErr, _ := h.entries[0].Data["saaskit.error"].(*errors.Error)
-			firstLine := strings.Split(string(bugsnagErr.Stack()), "\n")[0]
-			assert.Contains(t, firstLine, "log_test.go:")
+			if bugsnagErr, ok := h.entries[0].Data["saaskit.error"].(*errors.Error); ok {
+				assert.IsType(t, tt.wantErrType, bugsnagErr.Err)
+				firstLine := strings.Split(string(bugsnagErr.Stack()), "\n")[0]
+				assert.Contains(t, firstLine, "log_test.go:")
+			} else {
+				assert.IsType(t, tt.wantErrType, h.entries[0].Data["saaskit.error"])
+			}
 		})
 	}
 }

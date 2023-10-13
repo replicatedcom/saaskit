@@ -68,7 +68,7 @@ func (hook *bugsnagHook) Fire(entry *logrus.Entry) error {
 
 	if _, ok := notifyErr.(*bugsnagerrors.Error); !ok {
 		depth := getCallerDepth()
-		skip := depth - 2 // i am not sure why 2...
+		skip := depth - 1
 		notifyErr = bugsnagerrors.New(notifyErr, skip)
 	}
 

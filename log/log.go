@@ -109,11 +109,7 @@ func Error(args ...interface{}) {
 	Log.WithFields(getSaaskitError(args, 1)).Error(args...)
 }
 func Errorf(format string, args ...interface{}) {
-	err := errors.New(fmt.Errorf(format, args...), 1)
-	errFields := logrus.Fields{"saaskit.error": err}
-	Log.WithFields(errFields).Errorf(err.Error())
-	// TODO: we want this, but it doesn't pass go vet
-	// Log.WithFields(getSaaskitErrorf(format, args, 1)).Errorf(format, args...)
+	Log.WithFields(getSaaskitErrorf(format, args, 1)).Errorf(format, args...)
 }
 
 func Fatal(args ...interface{}) {
@@ -136,7 +132,7 @@ func filterEvents(event *bugsnag.Event, config *bugsnag.Configuration) error {
 
 func getSaaskitError(args []interface{}, skip int) logrus.Fields {
 	if err, ok := args[0].(error); ok {
-		return logrus.Fields{"saaskit.error": err}
+		return logrus.Fields{"saaskit.error": errors.New(err, skip+1)}
 	} else {
 		return getSaaskitError([]interface{}{errors.New(fmt.Sprint(args...), skip+1)}, 0)
 	}
