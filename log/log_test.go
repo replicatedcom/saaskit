@@ -20,17 +20,40 @@ import (
 func TestFilterEvents(t *testing.T) {
 	tests := []struct {
 		name   string
-		given  errors.Error
+		given  func() errors.Error
 		expect error
 	}{
 		// Cover error construction cases in Error() and Errorf()
 		// TODO: refactor log, inject param dependency for testability, etc
 		// so we can write tests that InitLog and call Error(), et all
-		{"context canceled, bare", *errors.New(context.Canceled, 1), filteredErr},
-		{"context canceled, wrapped in fmt", *errors.New(fmt.Errorf("wrapped %w", context.Canceled), 1), filteredErr},
-		{"context canceled, wrapped with Wrap()", *errors.New(perrors.Wrap(context.Canceled, "wrapped"), 1), filteredErr},
-		{"context canceled, unwrapped", *errors.New(fmt.Errorf("unwrapped %v", context.Canceled), 1), nil},
-		{"other, bare", *errors.New(goerrors.New("other"), 1), nil},
+		{
+			name:   "context canceled, bare",
+			given:  func() errors.Error { return *errors.New(context.Canceled, 1) },
+			expect: filteredErr,
+		},
+		{
+			name: "context canceled, wrapped in fmt",
+			given: func() errors.Error {
+				werr := fmt.Errorf("wrapped %w", context.Canceled)
+				return *errors.New(werr, 1)
+			},
+			expect: filteredErr,
+		},
+		{
+			name:   "context canceled, wrapped with Wrap()",
+			given:  func() errors.Error { return *errors.New(perrors.Wrap(context.Canceled, "wrapped"), 1) },
+			expect: filteredErr,
+		},
+		{
+			name:   "context canceled, unwrapped",
+			given:  func() errors.Error { return *errors.New(fmt.Errorf("unwrapped %v", context.Canceled), 1) },
+			expect: nil,
+		},
+		{
+			name:   "other, bare",
+			given:  func() errors.Error { return *errors.New(goerrors.New("other"), 1) },
+			expect: nil,
+		},
 	}
 	for _, tt := range tests {
 		ev := bugsnag.Event{Error: &tt.given}
