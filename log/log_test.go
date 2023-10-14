@@ -207,3 +207,34 @@ func Test_getSaaskitErrorf(t *testing.T) {
 		})
 	}
 }
+
+func TestErrorf(t *testing.T) {
+	type args struct {
+		format string
+		args   []interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "test with wrap verb",
+			args: args{
+				format: "test %w",
+				args:   []interface{}{goerrors.New("error")},
+			},
+			want: "test error",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buf := bytes.NewBuffer(nil)
+			Log = newLogger()
+			Log.SetOutput(buf)
+			Errorf(tt.args.format, tt.args.args...)
+			fmt.Println(buf.String())
+			assert.Contains(t, buf.String(), fmt.Sprintf(`msg="%s"`, tt.want))
+		})
+	}
+}

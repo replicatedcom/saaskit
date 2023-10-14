@@ -109,7 +109,9 @@ func Error(args ...interface{}) {
 	Log.WithFields(getSaaskitError(args, 1)).Error(args...)
 }
 func Errorf(format string, args ...interface{}) {
-	Log.WithFields(getSaaskitErrorf(format, args, 1)).Errorf(format, args...)
+	// NOTE: this must support the %w wrap verb since vandoor uses it
+	err := fmt.Errorf(format, args...)
+	Log.WithFields(getSaaskitErrorf(format, args, 1)).Errorf(err.Error())
 }
 
 func Fatal(args ...interface{}) {
