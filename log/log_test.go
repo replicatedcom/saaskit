@@ -81,7 +81,7 @@ func TestSaaskitError(t *testing.T) {
 		{
 			name:        "bugsnag error",
 			args:        []interface{}{"test1", "test2"},
-			wantErrType: &errors.Error{},
+			wantErrType: fmt.Errorf("blah"),
 		},
 	}
 	for _, tt := range tests {
@@ -96,10 +96,12 @@ func TestSaaskitError(t *testing.T) {
 
 			require.Len(t, h.entries, 1)
 			require.Contains(t, h.entries[0].Data, "saaskit.error")
-			assert.IsType(t, tt.wantErrType, h.entries[0].Data["saaskit.error"])
 			if bugsnagErr, ok := h.entries[0].Data["saaskit.error"].(*errors.Error); ok {
+				assert.IsType(t, tt.wantErrType, bugsnagErr.Err)
 				firstLine := strings.Split(string(bugsnagErr.Stack()), "\n")[0]
 				assert.Contains(t, firstLine, "log_test.go:")
+			} else {
+				assert.IsType(t, tt.wantErrType, h.entries[0].Data["saaskit.error"])
 			}
 		})
 	}
@@ -112,14 +114,16 @@ func TestSaaskitErrorf(t *testing.T) {
 	Log.SetLevel(logrus.DebugLevel) // default
 
 	tests := []struct {
-		name   string
-		format string
-		args   []interface{}
+		name        string
+		format      string
+		args        []interface{}
+		wantErrType interface{}
 	}{
 		{
-			name:   "bugsnag error",
-			format: "test %s %s",
-			args:   []interface{}{"test1", "test2"},
+			name:        "bugsnag error",
+			format:      "test %s %s",
+			args:        []interface{}{"test1", "test2"},
+			wantErrType: fmt.Errorf("blah"),
 		},
 	}
 	for _, tt := range tests {
@@ -134,10 +138,13 @@ func TestSaaskitErrorf(t *testing.T) {
 
 			require.Len(t, h.entries, 1)
 			require.Contains(t, h.entries[0].Data, "saaskit.error")
-			assert.IsType(t, &errors.Error{}, h.entries[0].Data["saaskit.error"])
-			bugsnagErr, _ := h.entries[0].Data["saaskit.error"].(*errors.Error)
-			firstLine := strings.Split(string(bugsnagErr.Stack()), "\n")[0]
-			assert.Contains(t, firstLine, "log_test.go:")
+			if bugsnagErr, ok := h.entries[0].Data["saaskit.error"].(*errors.Error); ok {
+				assert.IsType(t, tt.wantErrType, bugsnagErr.Err)
+				firstLine := strings.Split(string(bugsnagErr.Stack()), "\n")[0]
+				assert.Contains(t, firstLine, "log_test.go:")
+			} else {
+				assert.IsType(t, tt.wantErrType, h.entries[0].Data["saaskit.error"])
+			}
 		})
 	}
 }
@@ -197,6 +204,37 @@ func Test_getSaaskitErrorf(t *testing.T) {
 			if got := gotFields["saaskit.error"].(error).Error(); got != tt.want {
 				t.Errorf("getSaaskitErrorf() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestErrorf(t *testing.T) {
+	type args struct {
+		format string
+		args   []interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "test with wrap verb",
+			args: args{
+				format: "test %w",
+				args:   []interface{}{goerrors.New("error")},
+			},
+			want: "test error",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buf := bytes.NewBuffer(nil)
+			Log = newLogger()
+			Log.SetOutput(buf)
+			Errorf(tt.args.format, tt.args.args...)
+			fmt.Println(buf.String())
+			assert.Contains(t, buf.String(), fmt.Sprintf(`msg="%s"`, tt.want))
 		})
 	}
 }

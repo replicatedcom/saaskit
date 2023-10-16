@@ -1,4 +1,5 @@
-package log
+// cannot be part of the log package because getCallerDepth will strip the package from the stack trace
+package log_test
 
 import (
 	"io"
@@ -6,14 +7,21 @@ import (
 	"testing"
 
 	bugsnagerrors "github.com/bugsnag/bugsnag-go/v2/errors"
+	"github.com/replicatedcom/saaskit/log"
 	"github.com/replicatedcom/saaskit/param"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBugsnagHook(t *testing.T) {
 	param.Init(nil)
+	log.InitLog(&log.LogOptions{
+		LogLevel:   "debug",
+		BugsnagKey: "TESTING",
+	})
 
-	h := &bugsnagHook{}
+	h, err := log.NewBugsnagHook()
+	require.NoError(t, err)
 
 	var bugsnagNotifyErr error
 
@@ -22,9 +30,9 @@ func TestBugsnagHook(t *testing.T) {
 		return nil
 	}
 
-	log := newLogger()
+	log := log.Log
 	log.SetOutput(io.Discard)
-	log.logger.AddHook(h)
+	log.AddHook(h)
 
 	log.Error("test 1")
 	assert.NotNil(t, bugsnagNotifyErr)
