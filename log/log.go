@@ -10,6 +10,7 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2/errors"
 	"github.com/replicatedcom/saaskit/param"
 	"github.com/sirupsen/logrus"
+	dd_logrus "gopkg.in/DataDog/dd-trace-go.v1/contrib/sirupsen/logrus"
 )
 
 var (
@@ -35,7 +36,8 @@ func InitLog(opts *LogOptions) {
 
 	Log.SetFormatter(&ConsoleFormatter{})
 
-	Log.logger.AddHook(&CallerHook{})
+	Log.AddHook(&CallerHook{})
+	Log.AddHook(&dd_logrus.DDContextLogHook{}) // This associates TraceID to logs
 
 	if opts == nil {
 		return
