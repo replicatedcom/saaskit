@@ -35,7 +35,8 @@ func InitLog(opts *LogOptions) {
 
 	Log.SetFormatter(&ConsoleFormatter{})
 
-	Log.logger.AddHook(&CallerHook{})
+	Log.AddHook(&CallerHook{})
+	Log.AddHook(&dd_logrus.DDContextLogHook{}) // This associates TraceID to logs
 
 	if opts == nil {
 		return
