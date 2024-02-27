@@ -10,6 +10,7 @@ import (
 	"github.com/bugsnag/bugsnag-go/v2/errors"
 	"github.com/replicatedcom/saaskit/param"
 	"github.com/sirupsen/logrus"
+	dd_logrus "gopkg.in/DataDog/dd-trace-go.v1/contrib/sirupsen/logrus"
 )
 
 var (
