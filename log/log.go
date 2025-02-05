@@ -12,14 +12,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var (
-	Log Logger
-)
+var Log Logger
 
 type LogOptions struct {
 	LogLevel   string
 	BugsnagKey string
 	AppVersion string
+
+	// UseJSONFormatter will use JSONFormatter, default is ConsoleFormatter.
+	UseJSONFormatter bool
 }
 
 func InitLog(opts *LogOptions) {
@@ -33,12 +34,16 @@ func InitLog(opts *LogOptions) {
 		}
 	}
 
-	Log.SetFormatter(&ConsoleFormatter{})
-
 	Log.logger.AddHook(&CallerHook{})
 
 	if opts == nil {
 		return
+	}
+
+	if opts.UseJSONFormatter {
+		Log.SetFormatter(&JSONFormatter{})
+	} else {
+		Log.SetFormatter(&ConsoleFormatter{})
 	}
 
 	if opts.LogLevel != "" {
@@ -74,6 +79,7 @@ func InitLog(opts *LogOptions) {
 func WithField(key string, value interface{}) *logrus.Entry {
 	return Log.WithField(key, value)
 }
+
 func WithFields(fields logrus.Fields) *logrus.Entry {
 	return Log.WithFields(fields)
 }
@@ -81,6 +87,7 @@ func WithFields(fields logrus.Fields) *logrus.Entry {
 func Debug(args ...interface{}) {
 	Log.Debug(args...)
 }
+
 func Debugf(format string, args ...interface{}) {
 	Log.Debugf(format, args...)
 }
@@ -88,6 +95,7 @@ func Debugf(format string, args ...interface{}) {
 func Info(args ...interface{}) {
 	Log.Info(args...)
 }
+
 func Infof(format string, args ...interface{}) {
 	Log.Infof(format, args...)
 }
@@ -95,12 +103,15 @@ func Infof(format string, args ...interface{}) {
 func Warning(args ...interface{}) {
 	Log.WithFields(getSaaskitError(args, 1)).Warning(args...)
 }
+
 func Warningf(format string, args ...interface{}) {
 	Log.WithFields(getSaaskitErrorf(format, args, 1)).Warningf(format, args...)
 }
+
 func Warn(args ...interface{}) {
 	Log.WithFields(getSaaskitError(args, 1)).Warning(args...)
 }
+
 func Warnf(format string, args ...interface{}) {
 	Log.WithFields(getSaaskitErrorf(format, args, 1)).Warningf(format, args...)
 }
@@ -108,6 +119,7 @@ func Warnf(format string, args ...interface{}) {
 func Error(args ...interface{}) {
 	Log.WithFields(getSaaskitError(args, 1)).Error(args...)
 }
+
 func Errorf(format string, args ...interface{}) {
 	// NOTE: this must support the %w wrap verb since vandoor uses it
 	err := fmt.Errorf(format, args...)
@@ -117,6 +129,7 @@ func Errorf(format string, args ...interface{}) {
 func Fatal(args ...interface{}) {
 	Log.WithFields(getSaaskitError(args, 1)).Fatal(args...)
 }
+
 func Fatalf(format string, args ...interface{}) {
 	Log.WithFields(getSaaskitErrorf(format, args, 1)).Fatalf(format, args...)
 }
