@@ -96,7 +96,7 @@ func TestPrefixFieldClashes(t *testing.T) {
 	assert.Contains(t, out.String(), `"fields.timestamp":"test"`)
 	assert.Contains(t, out.String(), `"fields.caller":"test"`)
 	assert.Contains(t, out.String(), `"level":"info"`)
-	assert.Contains(t, out.String(), `"message":"super awesome tst"`)
+	assert.Contains(t, out.String(), `"message":"super awesome test"`)
 }
 
 func TestSaaskitError(t *testing.T) {
