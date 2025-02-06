@@ -43,23 +43,60 @@ func TestFilterEvents(t *testing.T) {
 
 func TestCallerHook(t *testing.T) {
 	param.Init(nil)
-
-	h := &CallerHook{}
+	log := newLogger()
+	log.AddHook(&CallerHook{})
 
 	out := bytes.NewBuffer(nil)
-	log := newLogger()
-	log.SetOutput(out)
-	log.logger.AddHook(h)
-	log.SetFormatter(&ConsoleFormatter{})
-
-	log.Error("test 1")
-	assert.Contains(t, out.String(), "testing.go:")
-
-	out = bytes.NewBuffer(nil)
 	log.SetOutput(out)
 
-	log.WithField("test", "test").WithField("test2", "test2").Error("test 2")
-	assert.Contains(t, out.String(), "testing.go:")
+	validateFunc := func(formatter logrus.Formatter) {
+		if _, ok := formatter.(*JSONFormatter); ok {
+			assert.Contains(t, out.String(), "caller", "testing.go:")
+		} else {
+			assert.Contains(t, out.String(), "testing.go:")
+		}
+
+		out.Reset()
+	}
+
+	for _, formatter := range []logrus.Formatter{
+		&ConsoleFormatter{}, &JSONFormatter{},
+	} {
+		t.Run(fmt.Sprintf("%T", formatter), func(t *testing.T) {
+			log.SetFormatter(formatter)
+
+			log.Error("test 1")
+			validateFunc(formatter)
+
+			log.WithField("test", "test").WithField("test2", "test2").Info("test 2")
+			validateFunc(formatter)
+		})
+	}
+}
+
+func TestPrefixFieldClashes(t *testing.T) {
+	param.Init(nil)
+	Log = newLogger()
+
+	out := bytes.NewBuffer(nil)
+	Log.SetOutput(out)
+	Log.SetFormatter(&JSONFormatter{})
+
+	Log.AddHook(&CallerHook{})
+
+	Log.WithFields(logrus.Fields{
+		"level":     "test",
+		"message":   "test",
+		"timestamp": "test",
+		"caller":    "test",
+	}).Info("super awesome test")
+
+	assert.Contains(t, out.String(), `"fields.level":"test"`)
+	assert.Contains(t, out.String(), `"fields.message":"test"`)
+	assert.Contains(t, out.String(), `"fields.timestamp":"test"`)
+	assert.Contains(t, out.String(), `"fields.caller":"test"`)
+	assert.Contains(t, out.String(), `"level":"info"`)
+	assert.Contains(t, out.String(), `"message":"super awesome test"`)
 }
 
 func TestSaaskitError(t *testing.T) {
@@ -85,25 +122,30 @@ func TestSaaskitError(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			out := bytes.NewBuffer(nil)
-			Log.SetOutput(out)
+		for _, formatter := range []logrus.Formatter{
+			&ConsoleFormatter{}, &JSONFormatter{},
+		} {
+			t.Run(fmt.Sprintf("%s %T", tt.name, formatter), func(t *testing.T) {
+				out := bytes.NewBuffer(nil)
+				Log.SetOutput(out)
+				Log.SetFormatter(formatter)
 
-			h := &hook{}
-			Log.AddHook(h)
+				h := &hook{}
+				Log.AddHook(h)
 
-			Error(tt.args...)
+				Error(tt.args...)
 
-			require.Len(t, h.entries, 1)
-			require.Contains(t, h.entries[0].Data, "saaskit.error")
-			if bugsnagErr, ok := h.entries[0].Data["saaskit.error"].(*errors.Error); ok {
-				assert.IsType(t, tt.wantErrType, bugsnagErr.Err)
-				firstLine := strings.Split(string(bugsnagErr.Stack()), "\n")[0]
-				assert.Contains(t, firstLine, "log_test.go:")
-			} else {
-				assert.IsType(t, tt.wantErrType, h.entries[0].Data["saaskit.error"])
-			}
-		})
+				require.Len(t, h.entries, 1)
+				require.Contains(t, h.entries[0].Data, "saaskit.error")
+				if bugsnagErr, ok := h.entries[0].Data["saaskit.error"].(*errors.Error); ok {
+					assert.IsType(t, tt.wantErrType, bugsnagErr.Err)
+					firstLine := strings.Split(string(bugsnagErr.Stack()), "\n")[0]
+					assert.Contains(t, firstLine, "log_test.go:")
+				} else {
+					assert.IsType(t, tt.wantErrType, h.entries[0].Data["saaskit.error"])
+				}
+			})
+		}
 	}
 }
 
@@ -127,25 +169,30 @@ func TestSaaskitErrorf(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			out := bytes.NewBuffer(nil)
-			Log.SetOutput(out)
+		for _, formatter := range []logrus.Formatter{
+			&ConsoleFormatter{}, &JSONFormatter{},
+		} {
+			t.Run(fmt.Sprintf("%s %T", tt.name, formatter), func(t *testing.T) {
+				out := bytes.NewBuffer(nil)
+				Log.SetOutput(out)
+				Log.SetFormatter(formatter)
 
-			h := &hook{}
-			Log.AddHook(h)
+				h := &hook{}
+				Log.AddHook(h)
 
-			Errorf(tt.format, tt.args...)
+				Errorf(tt.format, tt.args...)
 
-			require.Len(t, h.entries, 1)
-			require.Contains(t, h.entries[0].Data, "saaskit.error")
-			if bugsnagErr, ok := h.entries[0].Data["saaskit.error"].(*errors.Error); ok {
-				assert.IsType(t, tt.wantErrType, bugsnagErr.Err)
-				firstLine := strings.Split(string(bugsnagErr.Stack()), "\n")[0]
-				assert.Contains(t, firstLine, "log_test.go:")
-			} else {
-				assert.IsType(t, tt.wantErrType, h.entries[0].Data["saaskit.error"])
-			}
-		})
+				require.Len(t, h.entries, 1)
+				require.Contains(t, h.entries[0].Data, "saaskit.error")
+				if bugsnagErr, ok := h.entries[0].Data["saaskit.error"].(*errors.Error); ok {
+					assert.IsType(t, tt.wantErrType, bugsnagErr.Err)
+					firstLine := strings.Split(string(bugsnagErr.Stack()), "\n")[0]
+					assert.Contains(t, firstLine, "log_test.go:")
+				} else {
+					assert.IsType(t, tt.wantErrType, h.entries[0].Data["saaskit.error"])
+				}
+			})
+		}
 	}
 }
 
@@ -170,8 +217,7 @@ func (h *hook) Levels() []logrus.Level {
 
 var _ error = myError{}
 
-type myError struct {
-}
+type myError struct{}
 
 func (e myError) Error() string {
 	return "my error"
