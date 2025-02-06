@@ -24,32 +24,37 @@ type LogOptions struct {
 }
 
 func InitLog(opts *LogOptions) {
-	Log = newLogger()
-	Log.SetLevel(logrus.DebugLevel) // default
+	Log = New(opts)
+}
+
+// New returns a new local Logger.
+func New(opts *LogOptions) Logger {
+	nl := newLogger()
+	nl.SetLevel(logrus.DebugLevel) // default
 	logLevel := param.Lookup("LOG_LEVEL", "/replicated/log_level", false)
 	if logLevel != "" {
 		lvl, err := logrus.ParseLevel(logLevel)
 		if err == nil {
-			Log.SetLevel(lvl)
+			nl.SetLevel(lvl)
 		}
 	}
 
-	Log.logger.AddHook(&CallerHook{})
+	nl.logger.AddHook(&CallerHook{})
 
 	if opts == nil {
-		return
+		return nl
 	}
 
 	if opts.UseJSONFormatter {
-		Log.SetFormatter(&JSONFormatter{})
+		nl.SetFormatter(&JSONFormatter{})
 	} else {
-		Log.SetFormatter(&ConsoleFormatter{})
+		nl.SetFormatter(&ConsoleFormatter{})
 	}
 
 	if opts.LogLevel != "" {
 		lvl, err := logrus.ParseLevel(opts.LogLevel)
 		if err == nil {
-			Log.SetLevel(lvl)
+			nl.SetLevel(lvl)
 		}
 	}
 
@@ -72,8 +77,10 @@ func InitLog(opts *LogOptions) {
 			golog.Fatal(err)
 		}
 
-		Log.AddHook(hook)
+		nl.AddHook(hook)
 	}
+
+	return nl
 }
 
 func WithField(key string, value interface{}) *logrus.Entry {
